@@ -440,8 +440,8 @@
       <div id="player-logged-out-view" class="card" style="text-align: center; padding: 24px 16px;">
         <i class="fa-solid fa-user-lock" style="font-size: 36px; color: var(--neon-gold); margin-bottom: 10px;"></i>
         <h2 style="font-family: var(--font-heading); font-size: 16px; margin-bottom: 6px;">ÁREA RESTRITA AO JOGADOR</h2>
-        <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px;">Entre com seu ID e Senha ou crie sua senha com o ID pré-cadastrado pelo ADM.</p>
-        <button class="btn-primary" onclick="openModal('modal-player-auth')"><i class="fa-solid fa-right-to-bracket"></i> ENTRAR / CRIAR SENHA</button>
+        <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px;">Digite seu ID do Free Fire pra ver suas partidas, kills e ganhos.</p>
+        <button class="btn-primary" onclick="openModal('modal-player-auth')"><i class="fa-solid fa-right-to-bracket"></i> ENTRAR COM MEU ID</button>
       </div>
 
       <div id="player-logged-in-view" class="hidden">
@@ -581,7 +581,6 @@
             <thead>
               <tr>
                 <th>Nick / ID</th>
-                <th>Senha</th>
                 <th>Status da Conta</th>
                 <th>Medalhas</th>
                 <th>Partidas</th>
@@ -683,37 +682,15 @@
         <button class="btn-icon" onclick="closeModal('modal-player-auth')"><i class="fa-solid fa-xmark"></i></button>
       </div>
 
-      <div class="auth-tabs">
-        <button class="auth-tab-btn active" id="tab-btn-login" onclick="switchPlayerAuthTab('login')">ENTRAR</button>
-        <button class="auth-tab-btn" id="tab-btn-register" onclick="switchPlayerAuthTab('register')">CRIAR SENHA</button>
-      </div>
-
       <form id="form-player-login" onsubmit="event.preventDefault(); handlePlayerLogin();">
+        <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px; line-height: 1.4;">
+          Digite o ID que a organização cadastrou pra você. O site lembra do seu acesso por 7 dias neste aparelho.
+        </p>
         <div class="form-group">
           <label>ID DO FREE FIRE</label>
-          <input type="number" id="player-login-id" class="form-control" placeholder="Digite seu ID FF" required>
-        </div>
-        <div class="form-group">
-          <label>SENHA DE ACESSO</label>
-          <input type="password" id="player-login-pass" class="form-control" placeholder="Digite sua senha" required>
+          <input type="text" inputmode="numeric" autocomplete="off" id="player-login-id" class="form-control" placeholder="Digite seu ID FF" required>
         </div>
         <button type="submit" class="btn-primary">ENTRAR</button>
-      </form>
-
-      <form id="form-player-register" class="hidden" onsubmit="event.preventDefault(); handlePlayerRegister();">
-        <div class="form-group">
-          <label>ID DO FREE FIRE</label>
-          <input type="number" id="player-reg-id" class="form-control" placeholder="Digite o ID cadastrado pelo ADM" required>
-        </div>
-        <div class="alert-card warning1" style="margin-bottom: 12px;">
-          <i class="fa-solid fa-triangle-exclamation" style="font-size: 16px;"></i>
-          <div><strong>Importante:</strong> não use a mesma senha de contas reais, bancos, e-mail ou redes sociais. Crie uma senha exclusiva só pra esse site.</div>
-        </div>
-        <div class="form-group">
-          <label>CRIE UMA NOVA SENHA</label>
-          <input type="password" id="player-reg-pass" class="form-control" placeholder="Crie uma senha de acesso (exclusiva, não reutilize)" required minlength="4">
-        </div>
-        <button type="submit" class="btn-primary">VERIFICAR & SALVAR</button>
       </form>
     </div>
   </div>
@@ -956,8 +933,8 @@
     };
 
     // Sessão do jogador "lembrada" no navegador. Guardamos só um token
-    // aleatório (nunca a senha) e o banco decide se ele ainda é válido —
-    // por padrão dura 30 dias e se renova sozinha enquanto a pessoa usa o site.
+    // aleatório e o banco decide se ele ainda é válido — dura 7 dias e se
+    // renova sozinha enquanto a pessoa usa o site. Cada aparelho tem o seu token.
     const PLAYER_SESSION_KEY = 'nova_league_player_session';
 
     let adminClickCount = 0;
@@ -1229,7 +1206,7 @@
         return;
       }
 
-      // jogadores: sempre via view pública (sem hash de senha nem código)
+      // jogadores: sempre via view pública
       const { data: p } = await _supabase.from('public_jogadores').select('*');
       if (p) state.players = p;
 
@@ -1245,25 +1222,10 @@
       renderAll();
     }
 
-    function switchPlayerAuthTab(tab) {
-      const loginBtn = document.getElementById('tab-btn-login');
-      const registerBtn = document.getElementById('tab-btn-register');
-      const loginForm = document.getElementById('form-player-login');
-      const registerForm = document.getElementById('form-player-register');
-
-      if (tab === 'login') {
-        loginBtn.classList.add('active');
-        registerBtn.classList.remove('active');
-        loginForm.classList.remove('hidden');
-        registerForm.classList.add('hidden');
-      } else {
-        registerBtn.classList.add('active');
-        loginBtn.classList.remove('active');
-        registerForm.classList.remove('hidden');
-        loginForm.classList.add('hidden');
-      }
-    }
-
+    // Acesso do jogador: só o ID. Não existe senha nem conta a criar — o ADM
+    // cadastra o ID e a pessoa entra com ele. O banco devolve um token de sessão
+    // que fica salvo neste aparelho por 7 dias (cada aparelho tem o seu, então
+    // o mesmo ID pode estar aberto em vários lugares ao mesmo tempo).
     async function handlePlayerLogin() {
       if (!_supabase) {
         showToast('Banco de dados não configurado ainda.', 'danger');
@@ -1271,14 +1233,12 @@
       }
 
       const inputId = document.getElementById('player-login-id').value.trim();
-      const inputPass = document.getElementById('player-login-pass').value.trim();
+      if (!inputId) {
+        showToast('Digite seu ID do Free Fire.', 'danger');
+        return;
+      }
 
-      // A comparação de senha roda dentro do banco (função player_login),
-      // então o hash nunca trafega pro navegador.
-      const { data, error } = await _supabase.rpc('player_login', {
-        p_game_id: inputId,
-        p_password: inputPass
-      });
+      const { data, error } = await _supabase.rpc('player_login', { p_game_id: inputId });
 
       if (error) {
         showToast('Erro ao tentar entrar. Tente novamente.', 'danger');
@@ -1305,48 +1265,9 @@
         localStorage.setItem(PLAYER_SESSION_KEY, result.session_token);
       }
 
+      document.getElementById('player-login-id').value = '';
       closeModal('modal-player-auth');
-      showToast(`Bem-vindo de volta, ${escapeHTML(state.currentPlayer.nick)}!`, 'success');
-      await fetchFromDatabase();
-    }
-
-    async function handlePlayerRegister() {
-      if (!_supabase) {
-        showToast('Banco de dados não configurado ainda.', 'danger');
-        return;
-      }
-
-      const inputId = document.getElementById('player-reg-id').value.trim();
-      const newPass = document.getElementById('player-reg-pass').value.trim();
-
-      const { data, error } = await _supabase.rpc('player_register', {
-        p_game_id: inputId,
-        p_new_password: newPass
-      });
-
-      if (error) {
-        showToast('Erro ao ativar a conta. Tente novamente.', 'danger');
-        return;
-      }
-
-      const result = data && data[0];
-      if (!result || result.error) {
-        showToast(result?.error || 'Não foi possível ativar a conta.', 'danger');
-        return;
-      }
-
-      state.currentPlayer = { id: result.id, nick: result.nick, gameId: result.gameId, status: 'normal', kills: 0, matchesCount: 0, earnings: 0 };
-
-      if (result.session_token) {
-        localStorage.setItem(PLAYER_SESSION_KEY, result.session_token);
-      }
-
-      closeModal('modal-player-auth');
-      showToast(`✓ Conta ativada para ${escapeHTML(result.nick)}!`, 'success');
-
-      document.getElementById('player-reg-id').value = '';
-      document.getElementById('player-reg-pass').value = '';
-
+      showToast(`Bem-vindo, ${escapeHTML(state.currentPlayer.nick)}!`, 'success');
       await fetchFromDatabase();
     }
 
@@ -1590,35 +1511,6 @@
         showToast(`Status de ${escapeHTML(player.nick)} atualizado!`);
         renderAll();
       }
-    }
-
-    // Remove a senha e encerra a sessão ativa do jogador, SEM apagar
-    // nenhuma informação dele (kills, ganhos, status, medalhas continuam).
-    // Serve tanto pra deixar o jogador recriar a senha quanto pra expulsar
-    // um acesso indevido (a sessão salva no navegador de quem estiver logado
-    // para de funcionar, porque o token também é limpo).
-    async function resetPlayerAccess(playerId) {
-      if (!_supabase) { showToast('Banco de dados não configurado ainda.', 'danger'); return; }
-
-      const player = state.players.find(p => String(p.id) === String(playerId));
-      const nick = player ? player.nick : 'jogador';
-
-      const confirmReset = confirm(`Remover a senha e encerrar a sessão de ${nick}?\n\nO jogador vai precisar criar uma nova senha pra entrar de novo. Kills, ganhos, status e medalhas NÃO são apagados — só o acesso é resetado.`);
-      if (!confirmReset) return;
-
-      const { error } = await _supabase.from('jogadores').update({
-        password_hash: null,
-        session_token: null,
-        session_expires_at: null,
-        failed_attempts: 0,
-        locked_until: null
-      }).eq('id', playerId);
-
-      if (error) { showToast('Erro ao resetar o acesso do jogador.', 'danger'); return; }
-
-      if (player) player.has_password = false;
-      showToast(`🔓 Acesso de ${escapeHTML(nick)} resetado — ele(a) precisa criar uma nova senha.`);
-      renderAll();
     }
 
     function openAddMatchModal() {
@@ -2159,22 +2051,16 @@
         .sort((a, b) => (b.matchesCount || 0) - (a.matchesCount || 0));
 
       if (state.players.length === 0) {
-        playersTable.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Nenhum ID liberado no banco.</td></tr>`;
+        playersTable.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Nenhum ID liberado no banco.</td></tr>`;
         return;
       }
       if (visiblePlayers.length === 0) {
-        playersTable.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Nenhum jogador encontrado para "${escapeHTML(playerSearchTerm)}".</td></tr>`;
+        playersTable.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Nenhum jogador encontrado para "${escapeHTML(playerSearchTerm)}".</td></tr>`;
         return;
       }
 
       playersTable.innerHTML = visiblePlayers.map(p => {
         const st = p.status || 'normal';
-        const passCell = p.has_password
-          ? `<span class="badge badge-paid">SENHA CRIADA</span>
-             <button class="btn-icon" style="width: 24px; height: 24px; margin-left: 4px; color: var(--neon-red);" title="Deslogar / resetar acesso" onclick="resetPlayerAccess('${p.id}')">
-               <i class="fa-solid fa-right-from-bracket" style="font-size: 11px;"></i>
-             </button>`
-          : '<span class="badge badge-pending">PENDENTE</span>';
         const autoTier = getProgressionTier(p.kills, p.earnings);
         const tierIcon = autoTier ? getAchievementMedalSVG(autoTier, 20) : '<span style="font-size:10px; color: var(--text-muted);">—</span>';
         const honraOn = !!p.is_honra;
@@ -2185,7 +2071,6 @@
               <strong>${escapeHTML(p.nick)}</strong>
               <div style="font-size: 10px; color: var(--text-muted);">ID: ${escapeHTML(p.gameId)}</div>
             </td>
-            <td>${passCell}</td>
             <td>
               <select class="status-select" onchange="updatePlayerStatus('${p.id}', this.value)">
                 <option value="normal" ${st === 'normal' ? 'selected' : ''}>🟢 Normal</option>
@@ -2349,7 +2234,7 @@
         profileContent.innerHTML = `
           <div class="empty-state">
             <i class="fa-solid fa-user-lock"></i>
-            <p>Faça login ou crie sua senha com o ID cadastrado pelo ADM.</p>
+            <p>Entre com seu ID do Free Fire pra ver seu perfil.</p>
           </div>
         `;
       }
