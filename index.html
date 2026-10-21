@@ -2,7 +2,9 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data:; connect-src https://aqvyehkrbjttvdirtjzd.supabase.co wss://aqvyehkrbjttvdirtjzd.supabase.co; manifest-src 'self'; base-uri 'none'; form-action 'self'; object-src 'none'">
+  <meta name="referrer" content="no-referrer">
   <title>NØVA LEAGUE — Esportes Eletrônicos</title>
 
   <link rel="icon" type="image/png" href="logo.png">
@@ -19,394 +21,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800;900&family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 
-  <style>
-    :root {
-      --bg-dark: #0b0e14;
-      --bg-card: #141a24;
-      --bg-card-hover: #1c2432;
-      --border-color: rgba(229, 184, 57, 0.22);
-      --border-glow: rgba(229, 184, 57, 0.45);
-      --neon-cyan: #e5b839;
-      --neon-purple: #c7962c;
-      --neon-green: #2ecc71;
-      --neon-yellow: #f1c40f;
-      --neon-orange: #e67e22;
-      --neon-gold: #f8d775;
-      --neon-red: #e74c3c;
-      --text-main: #ffffff;
-      --text-muted: #8d99ae;
-      --radius-sm: 8px;
-      --radius-md: 14px;
-      --radius-lg: 20px;
-      --font-heading: 'Orbitron', sans-serif;
-      --font-sub: 'Rajdhani', sans-serif;
-      --font-body: 'Inter', sans-serif;
-    }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-
-    body {
-      background-color: var(--bg-dark);
-      color: var(--text-main);
-      font-family: var(--font-body);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      overflow-x: hidden;
-      padding-bottom: 80px;
-    }
-
-    .bg-glow-1, .bg-glow-2 { position: fixed; width: 300px; height: 300px; z-index: -1; pointer-events: none; }
-    .bg-glow-1 { top: -100px; left: -80px; background: radial-gradient(circle, rgba(229, 184, 57, 0.12) 0%, rgba(0,0,0,0) 70%); }
-    .bg-glow-2 { bottom: -100px; right: -80px; background: radial-gradient(circle, rgba(199, 150, 44, 0.1) 0%, rgba(0,0,0,0) 70%); }
-
-    header {
-      padding: 14px 16px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      background: rgba(20, 26, 36, 0.92);
-      border-bottom: 1px solid var(--border-color);
-      backdrop-filter: blur(10px);
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
-
-    .brand { display: flex; align-items: center; gap: 10px; cursor: pointer; user-select: none; }
-    .brand-logo {
-      width: 36px; height: 36px;
-      background: linear-gradient(135deg, var(--neon-gold), var(--neon-purple));
-      border-radius: 10px; display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 0 12px rgba(229, 184, 57, 0.3);
-      position: relative; overflow: hidden;
-    }
-    .brand-logo img {
-      width: 100%; height: 100%; object-fit: cover; display: block;
-    }
-    .brand-logo-fallback {
-      display: none;
-      font-family: var(--font-heading); font-weight: 900; color: #0b0e14; font-size: 18px;
-      position: absolute; inset: 0; align-items: center; justify-content: center;
-    }
-    .brand-title {
-      font-family: var(--font-heading); font-size: 16px; font-weight: 900; letter-spacing: 1.2px;
-      background: linear-gradient(90deg, #ffffff, var(--neon-cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    }
-    .conn-status { font-size: 9px; font-weight: 700; padding: 3px 8px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px; }
-    .conn-status.online { background: rgba(46,204,113,0.15); color: var(--neon-green); border: 1px solid var(--neon-green); }
-    .conn-status.offline { background: rgba(231,76,60,0.15); color: var(--neon-red); border: 1px solid var(--neon-red); }
-
-    main.container { max-width: 900px; margin: 0 auto; padding: 16px; width: 100%; flex: 1; }
-
-    .setup-warning {
-      background: rgba(231,76,60,0.12); border: 1px solid var(--neon-red); border-radius: var(--radius-md);
-      padding: 14px; margin-bottom: 16px; font-size: 12px; line-height: 1.5; color: #fff;
-    }
-    .setup-warning strong { color: var(--neon-red); }
-    .setup-warning code { background: rgba(0,0,0,0.4); padding: 1px 5px; border-radius: 4px; font-size: 11px; }
-
-    .card {
-      background: var(--bg-card); border: 1px solid var(--border-color);
-      border-radius: var(--radius-md); padding: 16px; margin-bottom: 16px; position: relative;
-      overflow: hidden; box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4);
-    }
-
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-      gap: 10px;
-      margin-bottom: 20px;
-    }
-
-    .stat-card {
-      background: linear-gradient(145deg, rgba(24, 31, 43, 0.95), rgba(32, 41, 58, 0.85));
-      border: 1px solid rgba(248, 215, 117, 0.18); border-radius: var(--radius-md); padding: 12px;
-      display: flex; flex-direction: column; justify-content: space-between; position: relative;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 4px 16px rgba(0,0,0,0.25);
-    }
-    .stat-card::before {
-      content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%;
-      background: var(--neon-cyan); border-radius: 4px 0 0 4px;
-    }
-    .stat-card.accent-purple::before { background: var(--neon-purple); }
-    .stat-card.accent-green::before { background: var(--neon-green); }
-    .stat-card.accent-gold::before { background: var(--neon-gold); }
-
-    .stat-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-muted); font-weight: 600; }
-    .stat-val { font-family: var(--font-sub); font-size: 22px; font-weight: 700; margin-top: 4px; color: #fff; }
-
-    .section-header { display: flex; justify-content: space-between; align-items: center; margin: 16px 0 12px 0; }
-    .section-title { font-family: var(--font-heading); font-size: 14px; letter-spacing: 1px; display: flex; align-items: center; gap: 8px; color: var(--neon-gold); }
-
-    .match-group-card {
-      background: var(--bg-card);
-      border: 1px solid rgba(229, 184, 57, 0.2);
-      border-radius: var(--radius-md);
-      margin-bottom: 12px;
-      transition: border-color 0.2s ease;
-    }
-
-    .match-header-btn {
-      width: 100%;
-      padding: 14px;
-      background: rgba(0,0,0,0.2);
-      border: none;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      color: #fff;
-      cursor: pointer;
-      text-align: left;
-      border-radius: var(--radius-md);
-    }
-    .match-header-btn:hover { background: rgba(229, 184, 57, 0.05); }
-
-    .match-details-box {
-      padding: 12px;
-      border-top: 1px solid rgba(229, 184, 57, 0.15);
-      background: rgba(0, 0, 0, 0.25);
-    }
-
-    .player-row-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 8px 10px;
-      margin-bottom: 6px;
-      border-radius: var(--radius-sm);
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid rgba(255, 255, 255, 0.05);
-      font-size: 13px;
-    }
-
-    .player-row-item.highlight-me {
-      background: rgba(229, 184, 57, 0.15);
-      border: 1px solid var(--neon-gold);
-      box-shadow: 0 0 10px rgba(229, 184, 57, 0.2);
-    }
-
-    .player-row-title {
-      font-family: var(--font-sub);
-      font-weight: 700;
-      font-size: 13px;
-      word-break: break-all;
-    }
-
-    .badge {
-      display: inline-flex; align-items: center; gap: 5px;
-      padding: 5px 12px; border-radius: 999px; font-size: 10px; font-weight: 700;
-      text-transform: uppercase; letter-spacing: 0.4px; border: 1px solid transparent;
-    }
-    .badge-paid, .badge-normal {
-      background: rgba(46, 204, 113, 0.12); color: var(--neon-green); border-color: rgba(46, 204, 113, 0.5);
-      box-shadow: 0 0 10px rgba(46, 204, 113, 0.25), inset 0 0 8px rgba(46, 204, 113, 0.08);
-    }
-    .badge-pending {
-      background: rgba(248, 215, 117, 0.12); color: var(--neon-gold); border-color: rgba(248, 215, 117, 0.5);
-      box-shadow: 0 0 10px rgba(248, 215, 117, 0.25), inset 0 0 8px rgba(248, 215, 117, 0.08);
-    }
-    .badge-warning1 {
-      background: rgba(241, 196, 15, 0.12); color: var(--neon-yellow); border-color: rgba(241, 196, 15, 0.5);
-      box-shadow: 0 0 10px rgba(241, 196, 15, 0.25), inset 0 0 8px rgba(241, 196, 15, 0.08);
-    }
-    .badge-warning2 {
-      background: rgba(230, 126, 34, 0.12); color: var(--neon-orange); border-color: rgba(230, 126, 34, 0.5);
-      box-shadow: 0 0 10px rgba(230, 126, 34, 0.25), inset 0 0 8px rgba(230, 126, 34, 0.08);
-    }
-
-    .alert-card {
-      padding: 12px 14px;
-      border-radius: var(--radius-sm);
-      margin-bottom: 12px;
-      font-size: 12px;
-      line-height: 1.4;
-      display: flex;
-      align-items: flex-start;
-      gap: 10px;
-    }
-    .alert-card.warning1 {
-      background: rgba(241, 196, 15, 0.15);
-      border: 1px solid var(--neon-yellow);
-      color: var(--neon-yellow);
-    }
-    .alert-card.warning2 {
-      background: rgba(230, 126, 34, 0.15);
-      border: 1px solid var(--neon-orange);
-      color: var(--neon-orange);
-    }
-
-    .empty-state {
-      text-align: center; padding: 24px 16px; color: var(--text-muted);
-      border: 1px dashed var(--border-color); border-radius: var(--radius-md); background: rgba(20, 26, 36, 0.4);
-    }
-    .empty-state i { font-size: 28px; margin-bottom: 8px; color: var(--neon-cyan); display: block; }
-
-    .coupon-card {
-      background: linear-gradient(135deg, rgba(20, 26, 36, 0.95), rgba(30, 40, 56, 0.95));
-      border: 1px dashed var(--neon-cyan); border-radius: var(--radius-md); padding: 14px; margin-bottom: 12px;
-      display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;
-    }
-    .coupon-code { font-family: var(--font-heading); font-size: 16px; color: var(--neon-gold); }
-
-    .btn-copy, .btn-primary, .btn-secondary {
-      background: linear-gradient(135deg, var(--neon-gold), var(--neon-cyan)); color: #0b0e14; border: none; padding: 8px 12px;
-      border-radius: var(--radius-sm); font-weight: 700; font-size: 12px; cursor: pointer; text-decoration: none;
-      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-    }
-    .btn-primary { width: 100%; padding: 12px; font-family: var(--font-sub); font-size: 15px; }
-    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
-    .btn-secondary { background: rgba(255,255,255,0.08); color: #fff; border: 1px solid var(--border-color); }
-
-    .pagination-controls {
-      display: flex; justify-content: space-between; align-items: center; margin-top: 14px; gap: 10px;
-    }
-
-    .bottom-nav {
-      position: fixed; bottom: 0; left: 0; right: 0; height: 60px;
-      background: rgba(11, 14, 20, 0.98); border-top: 1px solid var(--border-color);
-      display: flex; justify-content: space-around; align-items: center; backdrop-filter: blur(8px); z-index: 1000;
-    }
-    .nav-item {
-      display: flex; flex-direction: column; align-items: center; gap: 3px; color: var(--text-muted);
-      text-decoration: none; font-size: 9px; font-weight: 600; cursor: pointer; flex: 1; padding: 6px 0;
-      position: relative;
-    }
-    .nav-item i { font-size: 16px; position: relative; z-index: 1; }
-    .nav-item span { position: relative; z-index: 1; }
-    .nav-item.active { color: #0b0e14; }
-    .nav-item.active::before {
-      content: '';
-      position: absolute; left: 50%; top: 5px; transform: translateX(-50%);
-      width: 60px; height: calc(100% - 10px); max-width: 78%;
-      z-index: 0; border-radius: 999px;
-      background: linear-gradient(135deg, var(--neon-gold), var(--neon-cyan));
-      box-shadow: 0 0 12px rgba(248, 215, 117, 0.4);
-    }
-    /* Cada aba tem uma cor própria quando ativa — mesma paleta, mais variedade visual */
-    .nav-item.active.nav-color-green::before { background: linear-gradient(135deg, #6be3a0, var(--neon-green)); box-shadow: 0 0 12px rgba(46, 204, 113, 0.45); }
-    .nav-item.active.nav-color-orange::before { background: linear-gradient(135deg, #f3ac6a, var(--neon-orange)); box-shadow: 0 0 12px rgba(230, 126, 34, 0.45); }
-    .nav-item.active.nav-color-purple::before { background: linear-gradient(135deg, #e0b768, var(--neon-purple)); box-shadow: 0 0 12px rgba(199, 150, 44, 0.45); }
-    .nav-item.active.nav-color-yellow::before { background: linear-gradient(135deg, #f8e08a, var(--neon-yellow)); box-shadow: 0 0 12px rgba(241, 196, 15, 0.45); }
-
-    .nav-badge {
-      position: absolute; top: 4px; right: 28%; background: var(--neon-red); color: #fff;
-      font-size: 9px; font-weight: 800; width: 14px; height: 14px; border-radius: 50%;
-      display: flex; align-items: center; justify-content: center; box-shadow: 0 0 6px var(--neon-red);
-    }
-
-    .modal-overlay {
-      position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.85);
-      backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; z-index: 2000;
-      opacity: 0; pointer-events: none; transition: opacity 0.2s ease; padding: 12px;
-    }
-    .modal-overlay.active { opacity: 1; pointer-events: auto; }
-    .modal-content {
-      background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-lg);
-      width: 100%; max-width: 480px; max-height: 85vh; overflow-y: auto; padding: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.9);
-    }
-    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; border-bottom: 1px solid rgba(229,184,57,0.15); padding-bottom: 8px; }
-
-    .auth-tabs { display: flex; gap: 8px; margin-bottom: 14px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 8px; }
-    .auth-tab-btn { flex: 1; padding: 9px; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 999px; color: var(--text-muted); font-weight: 700; cursor: pointer; font-size: 11px; transition: all 0.2s ease; }
-    .auth-tab-btn.active { background: linear-gradient(135deg, var(--neon-gold), var(--neon-cyan)); color: #0b0e14; border-color: transparent; box-shadow: 0 0 16px rgba(248, 215, 117, 0.35); }
-
-    .form-group { margin-bottom: 12px; }
-    .form-group label { display: block; font-size: 11px; color: var(--text-muted); margin-bottom: 4px; font-weight: 600; }
-
-    .form-control {
-      width: 100%;
-      background: rgba(0,0,0,0.4);
-      border: 1px solid var(--border-color);
-      padding: 10px;
-      border-radius: var(--radius-sm);
-      color: #fff;
-      outline: none;
-      font-size: 15px;
-    }
-    .form-control:focus { border-color: var(--neon-gold); }
-
-    .player-entry-card {
-      background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); border-radius: var(--radius-sm);
-      padding: 10px; margin-bottom: 10px; position: relative;
-    }
-    .btn-remove-row {
-      position: absolute; top: 6px; right: 6px; background: rgba(231,76,60,0.2); color: var(--neon-red);
-      border: none; width: 22px; height: 22px; border-radius: 50%; cursor: pointer; font-size: 11px;
-    }
-
-    .admin-menu-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 14px; }
-    .admin-tile {
-      background: rgba(229, 184, 57, 0.06); backdrop-filter: blur(8px);
-      border: 1px solid var(--border-color); padding: 8px 4px;
-      border-radius: var(--radius-sm); text-align: center; cursor: pointer;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
-      transition: all 0.2s ease;
-    }
-    .admin-tile.active {
-      background: linear-gradient(145deg, rgba(248,215,117,0.22), rgba(229,184,57,0.1));
-      border-color: var(--neon-gold);
-      box-shadow: 0 0 14px rgba(248, 215, 117, 0.25), inset 0 1px 0 rgba(255,255,255,0.08);
-    }
-    .admin-tile i { font-size: 15px; color: var(--neon-gold); display: block; margin-bottom: 2px; }
-    .admin-tile span { font-size: 9px; font-weight: 700; }
-
-    .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
-    .responsive-table { width: 100%; border-collapse: collapse; font-size: 12px; white-space: nowrap; }
-    .responsive-table th, .responsive-table td { padding: 8px 10px; text-align: left; border-bottom: 1px solid rgba(229,184,57,0.1); }
-
-    .btn-icon {
-      width: 32px; height: 32px; border-radius: 8px; background: var(--bg-card);
-      border: 1px solid var(--border-color); color: var(--text-main); display: flex;
-      align-items: center; justify-content: center; cursor: pointer;
-    }
-
-    .toast-container { position: fixed; top: 16px; right: 16px; left: 16px; z-index: 3000; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
-    .toast {
-      background: rgba(20, 26, 36, 0.92); backdrop-filter: blur(14px);
-      border: 1px solid rgba(248, 215, 117, 0.16); padding: 10px 12px; border-radius: var(--radius-md);
-      color: #fff; font-size: 12px; display: flex; align-items: center; gap: 10px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
-      pointer-events: auto;
-    }
-    .toast-icon-chip {
-      width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
-      display: flex; align-items: center; justify-content: center; font-size: 12px;
-    }
-    .toast-icon-chip.success { background: rgba(46, 204, 113, 0.18); color: var(--neon-green); }
-    .toast-icon-chip.danger { background: rgba(231, 76, 60, 0.18); color: var(--neon-red); }
-    .toast-text { flex: 1; line-height: 1.4; }
-    .toast-close {
-      background: none; border: none; color: var(--text-muted); cursor: pointer;
-      font-size: 12px; padding: 4px; flex-shrink: 0;
-    }
-
-    .filter-box { display: flex; gap: 10px; margin-bottom: 12px; }
-
-    .faq-item {
-      background: rgba(0,0,0,0.3); border: 1px solid rgba(229,184,57,0.15);
-      border-radius: var(--radius-sm); padding: 10px; margin-bottom: 8px;
-    }
-    .faq-question { font-weight: 700; font-size: 12px; color: var(--neon-gold); margin-bottom: 4px; }
-    .faq-answer { font-size: 11px; color: var(--text-muted); line-height: 1.4; }
-
-    .status-select {
-      background: #0b0e14; border: 1px solid var(--border-color); color: #fff;
-      padding: 4px 6px; border-radius: 6px; font-size: 11px; outline: none;
-    }
-
-    .icon-coin { filter: drop-shadow(0 0 4px rgba(248, 215, 117, 0.55)); vertical-align: -3px; }
-
-    .hidden { display: none !important; }
-
-    @media (max-width: 480px) {
-      main.container { padding: 10px; }
-      .card { padding: 12px; }
-      .stats-grid { grid-template-columns: repeat(2, 1fr); }
-      .coupon-card { flex-direction: column; align-items: flex-start; }
-      .btn-copy { width: 100%; }
-    }
-  </style>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
@@ -414,9 +29,9 @@
   <div class="bg-glow-2"></div>
 
   <header>
-    <div class="brand" onclick="handleSecretAdminTrigger()">
+    <div class="brand" data-click="handleSecretAdminTrigger">
       <div class="brand-logo">
-        <img src="logo.png" alt="NØVA LEAGUE" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+        <img src="logo.png" alt="NØVA LEAGUE" data-image-fallback="true">
         <span class="brand-logo-fallback">N</span>
       </div>
       <div class="brand-title">NØVA LEAGUE</div>
@@ -424,24 +39,18 @@
     <span id="conn-status-badge" class="conn-status offline">CONECTANDO...</span>
   </header>
 
-  <div class="toast-container" id="toast-container"></div>
+  <div class="toast-container" id="toast-container" role="status" aria-live="polite"></div>
 
   <main class="container">
 
-    <div id="setup-warning-box" class="setup-warning hidden">
-      <strong>⚠️ Banco de dados não configurado.</strong><br>
-      Preencha <code>SUPABASE_URL</code> e <code>SUPABASE_ANON_KEY</code> no início do
-      <code>&lt;script&gt;</code> deste arquivo com as credenciais do seu projeto Supabase
-      (Project Settings → API) e rode o <code>supabase_schema.sql</code> no SQL Editor do
-      projeto. Sem isso, os dados ficam presos só neste navegador e não chegam pros jogadores.
-    </div>
+    <div id="setup-warning-box" class="setup-warning hidden">Serviço indisponível. Tente novamente mais tarde.</div>
 
     <section id="view-home">
       <div id="player-logged-out-view" class="card" style="text-align: center; padding: 24px 16px;">
         <i class="fa-solid fa-user-lock" style="font-size: 36px; color: var(--neon-gold); margin-bottom: 10px;"></i>
-        <h2 style="font-family: var(--font-heading); font-size: 16px; margin-bottom: 6px;">ÁREA RESTRITA AO JOGADOR</h2>
+        <h2 style="font-family: var(--font-heading); font-size: 16px; margin-bottom: 6px;">DIÁRIO DO JOGADOR</h2>
         <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px;">Digite seu ID do Free Fire pra ver suas partidas, kills e ganhos.</p>
-        <button class="btn-primary" onclick="openModal('modal-player-auth')"><i class="fa-solid fa-right-to-bracket"></i> ENTRAR COM MEU ID</button>
+        <button class="btn-primary" data-click="openModal" data-arg="modal-player-auth"><i class="fa-solid fa-right-to-bracket"></i> ACESSAR MEU DIÁRIO</button>
       </div>
 
       <div id="player-logged-in-view" class="hidden">
@@ -450,7 +59,7 @@
             <h2 style="font-family: var(--font-sub); font-size: 20px;">Olá, <span id="dash-player-nick" style="color: var(--neon-gold);">--</span> 👋</h2>
             <p style="font-size: 11px; color: var(--text-muted);">ID FF: <span id="dash-player-id">--</span></p>
           </div>
-          <button class="btn-copy" style="background: rgba(231,76,60,0.2); color: var(--neon-red);" onclick="playerLogout()">SAIR</button>
+          <button class="btn-copy" style="background: rgba(231,76,60,0.2); color: var(--neon-red);" data-click="playerLogout">SAIR</button>
         </div>
 
         <div class="stats-grid">
@@ -487,8 +96,8 @@
         ⚠️ Só entra no ranking quem já tem pelo menos 1 abate ou algum valor acumulado na conta.
       </p>
       <div class="auth-tabs">
-        <button class="auth-tab-btn active" id="tab-ranking-kills" onclick="switchRankingType('kills')"><i class="fa-solid fa-skull"></i> POR KILLS</button>
-        <button class="auth-tab-btn" id="tab-ranking-earnings" onclick="switchRankingType('earnings')"><svg class="icon-coin" viewBox="0 0 24 24" width="12" height="12"><defs><linearGradient id="coinGradTab" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#f8d775"/><stop offset="100%" stop-color="#c7962c"/></linearGradient></defs><circle cx="9" cy="15" r="7" fill="url(#coinGradTab)" opacity="0.85"/><circle cx="15" cy="9" r="7" fill="url(#coinGradTab)"/><text x="15" y="12" font-size="8" font-weight="900" text-anchor="middle" fill="#0b0e14">$</text></svg> POR GANHOS</button>
+        <button class="auth-tab-btn active" id="tab-ranking-kills" data-click="switchRankingType" data-arg="kills"><i class="fa-solid fa-skull"></i> POR KILLS</button>
+        <button class="auth-tab-btn" id="tab-ranking-earnings" data-click="switchRankingType" data-arg="earnings"><svg class="icon-coin" viewBox="0 0 24 24" width="12" height="12"><defs><linearGradient id="coinGradTab" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#f8d775"/><stop offset="100%" stop-color="#c7962c"/></linearGradient></defs><circle cx="9" cy="15" r="7" fill="url(#coinGradTab)" opacity="0.85"/><circle cx="15" cy="9" r="7" fill="url(#coinGradTab)"/><text x="15" y="12" font-size="8" font-weight="900" text-anchor="middle" fill="#0b0e14">$</text></svg> POR GANHOS</button>
       </div>
       <div id="ranking-list-container"></div>
     </section>
@@ -498,14 +107,14 @@
         <div class="section-title"><i class="fa-solid fa-gamepad"></i> CONSULTAR PARTIDAS</div>
       </div>
       <div class="filter-box">
-        <input type="number" id="filter-match-id" class="form-control" placeholder="Filtrar por ID do Jogador (Ex: 12345)">
+        <input type="text" inputmode="numeric" id="filter-match-id" class="form-control" placeholder="Seu ID completo (ou ID completo no painel ADM)">
       </div>
       <div id="full-matches-list"></div>
 
       <div class="pagination-controls" id="matches-pagination">
-        <button class="btn-secondary" id="btn-prev-page" onclick="changeMatchPage(-1)"><i class="fa-solid fa-chevron-left"></i> Anterior</button>
+        <button class="btn-secondary" id="btn-prev-page" data-click="changeMatchPage" data-arg="-1"><i class="fa-solid fa-chevron-left"></i> Anterior</button>
         <span style="font-size: 12px; color: var(--text-muted);" id="page-indicator">Página 1</span>
-        <button class="btn-secondary" id="btn-next-page" onclick="changeMatchPage(1)">Próximo <i class="fa-solid fa-chevron-right"></i></button>
+        <button class="btn-secondary" id="btn-next-page" data-click="changeMatchPage" data-arg="1">Próximo <i class="fa-solid fa-chevron-right"></i></button>
       </div>
     </section>
 
@@ -523,7 +132,7 @@
     <section id="view-admin" class="hidden">
       <div class="section-header">
         <div class="section-title" style="color: var(--neon-gold);"><i class="fa-solid fa-sliders"></i> PAINEL ADM</div>
-        <button class="btn-copy" style="background: rgba(231, 76, 60, 0.2); color: var(--neon-red);" onclick="adminLogout()">SAIR ADM</button>
+        <button class="btn-copy" style="background: rgba(231, 76, 60, 0.2); color: var(--neon-red);" data-click="adminLogout">SAIR ADM</button>
       </div>
 
       <div class="stats-grid">
@@ -546,19 +155,19 @@
       </div>
 
       <div class="admin-menu-grid">
-        <div class="admin-tile active" onclick="switchAdminSubtab('players', this)">
+        <div role="button" tabindex="0" class="admin-tile active" data-click="switchAdminSubtab" data-arg="players">
           <i class="fa-solid fa-users"></i>
           <span>Jogadores</span>
         </div>
-        <div class="admin-tile" onclick="switchAdminSubtab('matches', this)">
+        <div role="button" tabindex="0" class="admin-tile" data-click="switchAdminSubtab" data-arg="matches">
           <i class="fa-solid fa-gamepad"></i>
           <span>Partidas</span>
         </div>
-        <div class="admin-tile" onclick="switchAdminSubtab('coupons', this)">
+        <div role="button" tabindex="0" class="admin-tile" data-click="switchAdminSubtab" data-arg="coupons">
           <i class="fa-solid fa-ticket"></i>
           <span>Cupons</span>
         </div>
-        <div class="admin-tile" onclick="switchAdminSubtab('messages', this)">
+        <div role="button" tabindex="0" class="admin-tile" data-click="switchAdminSubtab" data-arg="messages">
           <i class="fa-solid fa-comment-dots"></i>
           <span>Mensagens</span>
         </div>
@@ -568,8 +177,8 @@
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; gap: 8px; flex-wrap: wrap;">
           <h4 style="font-family: var(--font-sub);">BANCO DE JOGADORES</h4>
           <div style="display: flex; gap: 6px;">
-            <button class="btn-copy" style="background: rgba(46, 204, 113, 0.2); color: var(--neon-green);" onclick="openModal('modal-bulk-players-import')"><i class="fa-solid fa-file-import"></i> IMPORTAR EM MASSA</button>
-            <button class="btn-copy" onclick="openModal('modal-add-player')">+ ADICIONAR ID</button>
+            <button class="btn-copy" style="background: rgba(46, 204, 113, 0.2); color: var(--neon-green);" data-click="openModal" data-arg="modal-bulk-players-import"><i class="fa-solid fa-file-import"></i> IMPORTAR EM MASSA</button>
+            <button class="btn-copy" data-click="openModal" data-arg="modal-add-player">+ ADICIONAR ID</button>
           </div>
         </div>
         <div class="filter-box">
@@ -596,8 +205,8 @@
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; gap: 8px; flex-wrap: wrap;">
           <h4 style="font-family: var(--font-sub);">PARTIDAS REGISTRADAS</h4>
           <div style="display: flex; gap: 8px;">
-            <button class="btn-copy" style="background: rgba(46, 204, 113, 0.2); color: var(--neon-green);" onclick="openModal('modal-bulk-import')"><i class="fa-solid fa-file-import"></i> IMPORTAR</button>
-            <button class="btn-copy" onclick="openAddMatchModal()">+ NOVA PARTIDA</button>
+            <button class="btn-copy" style="background: rgba(46, 204, 113, 0.2); color: var(--neon-green);" data-click="openModal" data-arg="modal-bulk-import"><i class="fa-solid fa-file-import"></i> IMPORTAR</button>
+            <button class="btn-copy" data-click="openAddMatchModal">+ NOVA PARTIDA</button>
           </div>
         </div>
         <div id="admin-matches-list"></div>
@@ -606,21 +215,21 @@
       <div id="admin-sub-coupons" class="card hidden">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
           <h4 style="font-family: var(--font-sub);">GERENCIAR CUPONS</h4>
-          <button class="btn-copy" onclick="openModal('modal-add-coupon')">+ NOVO CUPOM</button>
+          <button class="btn-copy" data-click="openModal" data-arg="modal-add-coupon">+ NOVO CUPOM</button>
         </div>
         <div id="admin-coupons-table-body"></div>
       </div>
 
       <div id="admin-sub-messages" class="card hidden">
         <h4 style="font-family: var(--font-sub); margin-bottom: 12px; color: var(--neon-gold);">ENVIAR MENSAGEM / AVISO</h4>
-        <form onsubmit="event.preventDefault(); handleSendMessage();">
+        <form data-submit="handleSendMessage">
           <div class="form-group">
-            <label>DESTINATÁRIO</label>
-            <select id="msg-recipient" class="form-control" required></select>
+            <label for="msg-recipient">DESTINATÁRIO</label>
+          <select id="msg-recipient" class="form-control" required></select>
           </div>
           <div class="form-group">
-            <label>MENSAGEM OU AVISO</label>
-            <textarea id="msg-text" class="form-control" rows="3" placeholder="Digite o aviso ou comunicado..." required></textarea>
+            <label for="msg-text">MENSAGEM OU AVISO</label>
+          <textarea maxlength="4000" id="msg-text" class="form-control" rows="3" placeholder="Digite o aviso ou comunicado..." required></textarea>
           </div>
           <button type="submit" class="btn-primary"><i class="fa-solid fa-paper-plane"></i> ENVIAR COMUNICADO</button>
         </form>
@@ -633,11 +242,21 @@
     </section>
 
   </main>
+  <div class="modal-overlay" id="modal-admin-mfa" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="modal-content"><h3>Verificação em duas etapas</h3>
+      <p id="mfa-instructions">Digite o código do seu aplicativo autenticador.</p>
+      <img id="mfa-qr" class="hidden" alt="QR para configurar o autenticador" width="200" height="200">
+      <form data-submit="handleAdminMfa"><label for="mfa-code">Código de 6 dígitos</label>
+      <input id="mfa-code" class="form-control" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" required>
+      <button class="btn-primary" type="submit">VERIFICAR</button></form>
+      <button class="btn-secondary" data-click="cancelAdminMfa">CANCELAR</button>
+    </div>
+  </div>
 
-  <div class="modal-overlay" id="modal-medal-info">
+  <div class="modal-overlay" role="dialog" aria-modal="true" aria-hidden="true" id="modal-medal-info">
     <div class="modal-content" style="max-width: 320px; text-align: center;">
       <div class="modal-header" style="justify-content: flex-end; border-bottom: none; margin-bottom: 4px;">
-        <button class="btn-icon" onclick="closeModal('modal-medal-info')"><i class="fa-solid fa-xmark"></i></button>
+        <button aria-label="Fechar janela" class="btn-icon" data-click="closeModal" data-arg="modal-medal-info"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <div id="medal-info-icon" style="display: flex; justify-content: center; margin-bottom: 12px;"></div>
       <h3 id="medal-info-name" style="font-family: var(--font-heading); font-size: 16px; color: var(--neon-gold); margin-bottom: 8px;"></h3>
@@ -646,11 +265,11 @@
     </div>
   </div>
 
-  <div class="modal-overlay" id="modal-support">
+  <div class="modal-overlay" role="dialog" aria-modal="true" aria-hidden="true" id="modal-support">
     <div class="modal-content">
       <div class="modal-header">
         <h3 class="modal-title" style="color: var(--neon-gold); font-size: 14px;"><i class="fa-solid fa-circle-question"></i> SUPORTE E FAQ</h3>
-        <button class="btn-icon" onclick="closeModal('modal-support')"><i class="fa-solid fa-xmark"></i></button>
+        <button aria-label="Fechar janela" class="btn-icon" data-click="closeModal" data-arg="modal-support"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <div>
         <div class="faq-item">
@@ -668,80 +287,80 @@
       </div>
 
       <div style="border-top: 1px dashed var(--border-color); padding-top: 12px; margin-top: 12px; text-align: center;">
-        <a href="https://wa.me/5500000000000?text=Olá,%20preciso%20de%20suporte%20na%20NØVA%20LEAGUE!" target="_blank" class="btn-primary" style="background: #25D366; color: #fff; text-decoration: none;">
+        <a id="support-link" class="btn-primary hidden" target="_blank" rel="noopener noreferrer">
           <i class="fa-brands fa-whatsapp" style="font-size: 16px;"></i> Falar no WhatsApp
         </a>
       </div>
     </div>
   </div>
 
-  <div class="modal-overlay" id="modal-player-auth">
+  <div class="modal-overlay" role="dialog" aria-modal="true" aria-hidden="true" id="modal-player-auth">
     <div class="modal-content">
       <div class="modal-header">
         <h3 class="modal-title" style="color: var(--neon-gold); font-size: 14px;"><i class="fa-solid fa-user-check"></i> ACESSO DO JOGADOR</h3>
-        <button class="btn-icon" onclick="closeModal('modal-player-auth')"><i class="fa-solid fa-xmark"></i></button>
+        <button aria-label="Fechar janela" class="btn-icon" data-click="closeModal" data-arg="modal-player-auth"><i class="fa-solid fa-xmark"></i></button>
       </div>
 
-      <form id="form-player-login" onsubmit="event.preventDefault(); handlePlayerLogin();">
+      <form id="form-player-login" data-submit="handlePlayerLogin">
         <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px; line-height: 1.4;">
-          Digite o ID que a organização cadastrou pra você. O site lembra do seu acesso por 7 dias neste aparelho.
+          Digite o ID que a organização cadastrou pra você. O acesso por ID permite consultar resultados e avisos. Quem conhece seu ID também pode consultar essas informações.
         </p>
         <div class="form-group">
-          <label>ID DO FREE FIRE</label>
-          <input type="text" inputmode="numeric" autocomplete="off" id="player-login-id" class="form-control" placeholder="Digite seu ID FF" required>
+          <label for="player-login-id">ID DO FREE FIRE</label>
+          <input type="text" inputmode="numeric" autocomplete="off" maxlength="20" pattern="[0-9]{3,20}" id="player-login-id" class="form-control" placeholder="Digite seu ID FF" required>
         </div>
         <button type="submit" class="btn-primary">ENTRAR</button>
       </form>
     </div>
   </div>
 
-  <div class="modal-overlay" id="modal-admin-auth">
+  <div class="modal-overlay" role="dialog" aria-modal="true" aria-hidden="true" id="modal-admin-auth">
     <div class="modal-content">
       <div class="modal-header">
         <h3 class="modal-title" style="color: var(--neon-gold); font-size: 14px;"><i class="fa-solid fa-shield-halved"></i> AUTENTICAÇÃO ADM</h3>
-        <button class="btn-icon" onclick="closeModal('modal-admin-auth')"><i class="fa-solid fa-xmark"></i></button>
+        <button aria-label="Fechar janela" class="btn-icon" data-click="closeModal" data-arg="modal-admin-auth"><i class="fa-solid fa-xmark"></i></button>
       </div>
-      <form onsubmit="event.preventDefault(); handleAdminAuth();">
+      <form data-submit="handleAdminAuth">
         <div class="form-group">
-          <label>E-MAIL</label>
-          <input type="email" id="admin-user-input" class="form-control" placeholder="Login de administrador" required autocomplete="off">
+          <label for="admin-user-input">E-MAIL</label>
+          <input type="email" maxlength="254" id="admin-user-input" class="form-control" placeholder="Login de administrador" required autocomplete="username">
         </div>
         <div class="form-group">
-          <label>SENHA</label>
-          <input type="password" id="admin-pass-input" class="form-control" placeholder="Senha de administrador" required>
+          <label for="admin-pass-input">SENHA</label>
+          <input type="password" autocomplete="current-password" maxlength="1024" id="admin-pass-input" class="form-control" placeholder="Senha de administrador" required>
         </div>
         <button type="submit" class="btn-primary">ENTRAR NO PAINEL</button>
       </form>
     </div>
   </div>
 
-  <div class="modal-overlay" id="modal-add-player">
+  <div class="modal-overlay" role="dialog" aria-modal="true" aria-hidden="true" id="modal-add-player">
     <div class="modal-content">
       <div class="modal-header">
         <h3 class="modal-title" style="color: var(--neon-gold); font-size: 14px;">CADASTRAR ID</h3>
-        <button class="btn-icon" onclick="closeModal('modal-add-player')"><i class="fa-solid fa-xmark"></i></button>
+        <button aria-label="Fechar janela" class="btn-icon" data-click="closeModal" data-arg="modal-add-player"><i class="fa-solid fa-xmark"></i></button>
       </div>
-      <form onsubmit="event.preventDefault(); handleAddPlayer();">
+      <form data-submit="handleAddPlayer">
         <div class="form-group">
-          <label>NICKNAME DO JOGADOR</label>
-          <input type="text" id="new-player-nick" class="form-control" placeholder="@PlayerFF" required>
+          <label for="new-player-nick">NICKNAME DO JOGADOR</label>
+          <input type="text" maxlength="80" id="new-player-nick" class="form-control" placeholder="@PlayerFF" required>
         </div>
         <div class="form-group">
-          <label>ID FREE FIRE</label>
-          <input type="number" id="new-player-id" class="form-control" placeholder="Ex: 12345678" required>
+          <label for="new-player-id">ID FREE FIRE</label>
+          <input type="text" inputmode="numeric" pattern="[0-9]{3,20}" maxlength="20" id="new-player-id" class="form-control" placeholder="Ex: 12345678" required>
         </div>
         <button type="submit" class="btn-primary">SALVAR NO BANCO</button>
       </form>
     </div>
   </div>
 
-  <div class="modal-overlay" id="modal-bulk-players-import">
+  <div class="modal-overlay" role="dialog" aria-modal="true" aria-hidden="true" id="modal-bulk-players-import">
     <div class="modal-content">
       <div class="modal-header">
         <h3 class="modal-title" style="color: var(--neon-gold); font-size: 14px;"><i class="fa-solid fa-users-rectangle"></i> IMPORTAÇÃO RÁPIDA DE IDs</h3>
-        <button class="btn-icon" onclick="closeModal('modal-bulk-players-import')"><i class="fa-solid fa-xmark"></i></button>
+        <button aria-label="Fechar janela" class="btn-icon" data-click="closeModal" data-arg="modal-bulk-players-import"><i class="fa-solid fa-xmark"></i></button>
       </div>
-      <form onsubmit="event.preventDefault(); handleBulkPlayersImport();">
+      <form data-submit="handleBulkPlayersImport">
         <div class="form-group">
           <label style="color: var(--neon-gold);">COLE A LISTA DE JOGADORES (FORMATO: ID, NICK)</label>
           <textarea id="bulk-players-input" class="form-control" rows="8" placeholder="Exemplo de envio:&#10;12345678, @PlayerFF1&#10;87654321, @PlayerFF2&#10;11223344, @PlayerFF3" required style="font-family: monospace; font-size: 12px;"></textarea>
@@ -754,16 +373,16 @@
     </div>
   </div>
 
-  <div class="modal-overlay" id="modal-add-match">
+  <div class="modal-overlay" role="dialog" aria-modal="true" aria-hidden="true" id="modal-add-match">
     <div class="modal-content">
       <div class="modal-header">
         <h3 class="modal-title" style="color: var(--neon-gold); font-size: 14px;">NOVA PARTIDA</h3>
-        <button class="btn-icon" onclick="closeModal('modal-add-match')"><i class="fa-solid fa-xmark"></i></button>
+        <button aria-label="Fechar janela" class="btn-icon" data-click="closeModal" data-arg="modal-add-match"><i class="fa-solid fa-xmark"></i></button>
       </div>
-      <form onsubmit="event.preventDefault(); handleAddMatch();">
+      <form data-submit="handleAddMatch">
         <div class="form-group">
-          <label>NÚMERO DA DIÁRIA / PARTIDA</label>
-          <input type="text" id="match-number" class="form-control" placeholder="PARTIDA 1" required>
+          <label for="match-number">NÚMERO DA DIÁRIA / PARTIDA</label>
+          <input type="text" maxlength="80" id="match-number" class="form-control" placeholder="PARTIDA 1" required>
         </div>
 
         <div class="form-group">
@@ -784,7 +403,7 @@
 
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
           <label style="font-size: 11px; font-weight: 700; color: var(--neon-gold);">JOGADORES DA PARTIDA</label>
-          <button type="button" class="btn-secondary" onclick="addPlayerRowToMatch()"><i class="fa-solid fa-plus"></i> Add Jogador</button>
+          <button type="button" class="btn-secondary" data-click="addPlayerRowToMatch"><i class="fa-solid fa-plus"></i> Add Jogador</button>
         </div>
 
         <div id="match-players-container"></div>
@@ -794,20 +413,20 @@
     </div>
   </div>
 
-  <div class="modal-overlay" id="modal-edit-match">
+  <div class="modal-overlay" role="dialog" aria-modal="true" aria-hidden="true" id="modal-edit-match">
     <div class="modal-content">
       <div class="modal-header">
         <h3 class="modal-title" style="color: var(--neon-gold); font-size: 14px;"><i class="fa-solid fa-pen"></i> EDITAR PARTIDA</h3>
-        <button class="btn-icon" onclick="closeModal('modal-edit-match')"><i class="fa-solid fa-xmark"></i></button>
+        <button aria-label="Fechar janela" class="btn-icon" data-click="closeModal" data-arg="modal-edit-match"><i class="fa-solid fa-xmark"></i></button>
       </div>
-      <form onsubmit="event.preventDefault(); handleEditMatch();">
+      <form data-submit="handleEditMatch">
         <div class="form-group">
-          <label>NÚMERO DA DIÁRIA / PARTIDA</label>
-          <input type="text" id="edit-match-number" class="form-control" required>
+          <label for="edit-match-number">NÚMERO DA DIÁRIA / PARTIDA</label>
+          <input type="text" maxlength="80" id="edit-match-number" class="form-control" required>
         </div>
         <div class="form-group">
           <label style="color: var(--neon-gold);"><i class="fa-regular fa-calendar-days"></i> DATA E HORA</label>
-          <input type="text" id="edit-match-date" class="form-control" required>
+          <input type="text" maxlength="120" id="edit-match-date" class="form-control" required>
         </div>
 
         <label style="font-size: 11px; font-weight: 700; color: var(--neon-gold); display: block; margin-bottom: 8px;">JOGADORES DESSA PARTIDA</label>
@@ -818,16 +437,16 @@
     </div>
   </div>
 
-  <div class="modal-overlay" id="modal-bulk-import">
+  <div class="modal-overlay" role="dialog" aria-modal="true" aria-hidden="true" id="modal-bulk-import">
     <div class="modal-content">
       <div class="modal-header">
         <h3 class="modal-title" style="color: var(--neon-gold); font-size: 14px;">IMPORTAR DADOS DA PARTIDA</h3>
-        <button class="btn-icon" onclick="closeModal('modal-bulk-import')"><i class="fa-solid fa-xmark"></i></button>
+        <button aria-label="Fechar janela" class="btn-icon" data-click="closeModal" data-arg="modal-bulk-import"><i class="fa-solid fa-xmark"></i></button>
       </div>
-      <form onsubmit="event.preventDefault(); handleBulkImport();">
+      <form data-submit="handleBulkImport">
         <div class="form-group">
-          <label>NÚMERO DA PARTIDA</label>
-          <input type="text" id="bulk-match-number" class="form-control" placeholder="PARTIDA 1" required>
+          <label for="bulk-match-number">NÚMERO DA PARTIDA</label>
+          <input type="text" maxlength="80" id="bulk-match-number" class="form-control" placeholder="PARTIDA 1" required>
         </div>
 
         <div class="form-group">
@@ -837,21 +456,21 @@
 
         <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px;">
           <div class="form-group">
-            <label>VALOR / KILL</label>
-            <input type="number" id="bulk-kill-val" class="form-control" value="4.00" step="0.5" required>
+            <label for="bulk-kill-val">VALOR / KILL</label>
+          <input type="number" id="bulk-kill-val" class="form-control" value="4.00" step="0.5" required>
           </div>
           <div class="form-group">
-            <label>TOP 1 (R$)</label>
-            <input type="number" id="bulk-top1-val" class="form-control" value="10.00" step="1" required>
+            <label for="bulk-top1-val">TOP 1 (R$)</label>
+          <input type="number" id="bulk-top1-val" class="form-control" value="10.00" step="1" required>
           </div>
           <div class="form-group">
-            <label>TOP 2 (R$)</label>
-            <input type="number" id="bulk-top2-val" class="form-control" value="5.00" step="1" required>
+            <label for="bulk-top2-val">TOP 2 (R$)</label>
+          <input type="number" id="bulk-top2-val" class="form-control" value="5.00" step="1" required>
           </div>
         </div>
 
         <div class="form-group">
-          <label>LISTA (FORMATO: ID, Kills, Posição)</label>
+          <label for="bulk-data-input">LISTA (FORMATO: ID, Kills, Posição)</label>
           <textarea id="bulk-data-input" class="form-control" rows="6" placeholder="Exemplo:&#10;12345678, 5, 1&#10;87654321, 2, 2" required style="font-family: monospace; font-size: 12px;"></textarea>
         </div>
 
@@ -860,24 +479,24 @@
     </div>
   </div>
 
-  <div class="modal-overlay" id="modal-add-coupon">
+  <div class="modal-overlay" role="dialog" aria-modal="true" aria-hidden="true" id="modal-add-coupon">
     <div class="modal-content">
       <div class="modal-header">
         <h3 class="modal-title" style="color: var(--neon-gold); font-size: 14px;">CRIAR CUPOM</h3>
-        <button class="btn-icon" onclick="closeModal('modal-add-coupon')"><i class="fa-solid fa-xmark"></i></button>
+        <button aria-label="Fechar janela" class="btn-icon" data-click="closeModal" data-arg="modal-add-coupon"><i class="fa-solid fa-xmark"></i></button>
       </div>
-      <form onsubmit="event.preventDefault(); handleAddCoupon();">
+      <form data-submit="handleAddCoupon">
         <div class="form-group">
-          <label>CÓDIGO DO CUPOM</label>
-          <input type="text" id="coupon-code" class="form-control" placeholder="NOVA10" required>
+          <label for="coupon-code">CÓDIGO DO CUPOM</label>
+          <input type="text" maxlength="40" pattern="[A-Za-z0-9_-]{1,40}" id="coupon-code" class="form-control" placeholder="NOVA10" required>
         </div>
         <div class="form-group">
-          <label>DESCONTO</label>
-          <input type="text" id="coupon-discount" class="form-control" placeholder="10% OFF" required>
+          <label for="coupon-discount">DESCONTO</label>
+          <input type="text" maxlength="160" id="coupon-discount" class="form-control" placeholder="10% OFF" required>
         </div>
         <div class="form-group">
-          <label>VALIDADE</label>
-          <input type="text" id="coupon-valid" class="form-control" placeholder="31/12/2026" required>
+          <label for="coupon-valid">VALIDADE</label>
+          <input type="text" maxlength="80" id="coupon-valid" class="form-control" placeholder="31/12/2026" required>
         </div>
         <button type="submit" class="btn-primary">CRIAR CUPOM</button>
       </form>
@@ -885,1501 +504,31 @@
   </div>
 
   <nav class="bottom-nav">
-    <div class="nav-item active" id="nav-home" onclick="switchTab('view-home')">
+    <div role="button" tabindex="0" class="nav-item active" id="nav-home" data-click="switchTab" data-arg="view-home">
       <i class="fa-solid fa-house"></i>
       <span>INÍCIO</span>
     </div>
-    <div class="nav-item nav-color-green" id="nav-ranking" onclick="switchTab('view-ranking')">
+    <div role="button" tabindex="0" class="nav-item nav-color-green" id="nav-ranking" data-click="switchTab" data-arg="view-ranking">
       <i class="fa-solid fa-trophy"></i>
       <span>RANKING</span>
     </div>
-    <div class="nav-item nav-color-orange" id="nav-matches" onclick="switchTab('view-matches')">
+    <div role="button" tabindex="0" class="nav-item nav-color-orange" id="nav-matches" data-click="switchTab" data-arg="view-matches">
       <i class="fa-solid fa-gamepad"></i>
       <span>PARTIDAS</span>
     </div>
-    <div class="nav-item nav-color-purple" id="nav-coupons" onclick="switchTab('view-coupons')">
+    <div role="button" tabindex="0" class="nav-item nav-color-purple" id="nav-coupons" data-click="switchTab" data-arg="view-coupons">
       <i class="fa-solid fa-ticket"></i>
       <span>CUPONS</span>
     </div>
-    <div class="nav-item nav-color-yellow" id="nav-profile" onclick="switchTab('view-profile')">
+    <div role="button" tabindex="0" class="nav-item nav-color-yellow" id="nav-profile" data-click="switchTab" data-arg="view-profile">
       <i class="fa-solid fa-user"></i>
       <span>PERFIL</span>
       <span id="nav-profile-badge" class="nav-badge hidden">!</span>
     </div>
   </nav>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script>
-    // =========================================================
-    // 1) PREENCHA COM OS DADOS DO SEU PROJETO SUPABASE
-    //    (Project Settings > API no painel do Supabase)
-    // 2) Rode o arquivo supabase_schema.sql inteiro no SQL Editor
-    //    do seu projeto ANTES de preencher isso.
-    // =========================================================
-    const SUPABASE_URL = 'https://aqvyehkrbjttvdirtjzd.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFxdnllaGtyYmp0dHZkaXJ0anpkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg3NTY5ODQsImV4cCI6MjEwNDMzMjk4NH0.910Vkg3EKBqy5vuDtIArhac4oArMqtFnPPaVI7RjzZ8';
-
-    const _supabase = (SUPABASE_URL !== 'SUA_URL_SUPABASE_AQUI' && SUPABASE_ANON_KEY !== 'SUA_CHAVE_ANONIMA_AQUI')
-      ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
-      : null;
-
-    const state = {
-      isAdminAuthenticated: false,
-      currentPlayer: null,
-      players: [],
-      matches: [],
-      coupons: [],
-      messages: []
-    };
-
-    // Sessão do jogador "lembrada" no navegador. Guardamos só um token
-    // aleatório e o banco decide se ele ainda é válido — dura 7 dias e se
-    // renova sozinha enquanto a pessoa usa o site. Cada aparelho tem o seu token.
-    const PLAYER_SESSION_KEY = 'nova_league_player_session';
-
-    let adminClickCount = 0;
-    let adminClickTimer = null;
-    let filterDebounceTimer = null;
-    let currentMatchPage = 1;
-    const MATCHES_PER_PAGE = 10;
-    let currentRankingType = 'kills'; // 'kills' ou 'earnings'
-
-    function switchRankingType(type) {
-      currentRankingType = type;
-      document.getElementById('tab-ranking-kills').classList.toggle('active', type === 'kills');
-      document.getElementById('tab-ranking-earnings').classList.toggle('active', type === 'earnings');
-      renderRankingList();
-    }
-
-    // Linguagem visual das medalhas: medalhão circular + estrela central,
-    // 3 tiers dentro da própria paleta (sem introduzir azul/roxo/rosa).
-    let svgIdCounter = 0;
-    function nextSvgId(prefix) { svgIdCounter++; return prefix + svgIdCounter; }
-
-    const TIER_COLORS = {
-      ouro:   { from: '#f8d775', to: '#e5b839', glow: 'rgba(248,215,117,0.6)' },
-      prata:  { from: '#e8ecf1', to: '#8d99ae', glow: 'rgba(141,153,174,0.4)' },
-      bronze: { from: '#c7962c', to: '#8a651c', glow: 'rgba(199,150,44,0.4)' }
-    };
-
-    function getRoundMedalSVG(tierKey, size = 26) {
-      const t = TIER_COLORS[tierKey];
-      if (!t) return null;
-      const gradId = nextSvgId('medalGrad');
-      return `
-        <svg viewBox="0 0 40 40" width="${size}" height="${size}" style="filter: drop-shadow(0 0 5px ${t.glow}); flex-shrink: 0;">
-          <defs>
-            <linearGradient id="${gradId}" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stop-color="${t.from}"/>
-              <stop offset="100%" stop-color="${t.to}"/>
-            </linearGradient>
-          </defs>
-          <circle cx="20" cy="20" r="17" fill="url(#${gradId})" stroke="rgba(0,0,0,0.25)" stroke-width="1"/>
-          <circle cx="20" cy="20" r="17" fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="1.5" stroke-dasharray="2 3"/>
-          <path d="M20 11 L22.5 17 L29 17.5 L24 21.8 L25.5 28 L20 24.5 L14.5 28 L16 21.8 L11 17.5 L17.5 17 Z" fill="#0b0e14" opacity="0.75"/>
-        </svg>
-      `;
-    }
-
-    // Honra: formato de escudo, dourado + vermelho — reconhecimento manual
-    function getHonraSVG(size = 20) {
-      const gradId = nextSvgId('honraGrad');
-      return `
-        <svg viewBox="0 0 40 40" width="${size}" height="${size}" style="filter: drop-shadow(0 0 5px rgba(231,76,60,0.5)); flex-shrink: 0;">
-          <defs>
-            <linearGradient id="${gradId}" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stop-color="#f8d775"/>
-              <stop offset="100%" stop-color="#e74c3c"/>
-            </linearGradient>
-          </defs>
-          <path d="M20 4 L34 9 V19 C34 29 28 35 20 38 C12 35 6 29 6 19 V9 Z" fill="url(#${gradId})" stroke="rgba(0,0,0,0.25)" stroke-width="1"/>
-          <path d="M20 4 L34 9 V19 C34 29 28 35 20 38 C12 35 6 29 6 19 V9 Z" fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="1.2"/>
-          <path d="M20 12 L23 18 L29 18.5 L24.5 22.5 L26 28 L20 24.7 L14 28 L15.5 22.5 L11 18.5 L17 18 Z" fill="#0b0e14" opacity="0.75"/>
-        </svg>
-      `;
-    }
-
-    // Verificado: selo-estrela com check, dourado + verde — reconhecimento manual
-    function getVerificadoSVG(size = 20) {
-      const gradId = nextSvgId('verifGrad');
-      return `
-        <svg viewBox="0 0 40 40" width="${size}" height="${size}" style="filter: drop-shadow(0 0 5px rgba(46,204,113,0.5)); flex-shrink: 0;">
-          <defs>
-            <linearGradient id="${gradId}" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stop-color="#f8d775"/>
-              <stop offset="100%" stop-color="#2ecc71"/>
-            </linearGradient>
-          </defs>
-          <path d="M20 3 L24 7 L29.5 6 L30 11.5 L34.5 15 L31.5 20 L34.5 25 L30 28.5 L29.5 34 L24 33 L20 37 L16 33 L10.5 34 L10 28.5 L5.5 25 L8.5 20 L5.5 15 L10 11.5 L10.5 6 L16 7 Z" fill="url(#${gradId})" stroke="rgba(0,0,0,0.25)" stroke-width="1"/>
-          <path d="M13 20 L18 25 L27 14" fill="none" stroke="#0b0e14" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity="0.85"/>
-        </svg>
-      `;
-    }
-
-    function getAchievementMedalSVG(key, size) {
-      if (key === 'ouro' || key === 'prata' || key === 'bronze') return getRoundMedalSVG(key, size);
-      if (key === 'honra') return getHonraSVG(size);
-      if (key === 'verificado') return getVerificadoSVG(size);
-      return '';
-    }
-
-    // Sistema de conquistas: Bronze/Prata/Ouro são automáticas e se
-    // SUBSTITUEM (só a mais alta aparece). Honra e Verificado são manuais
-    // (só o ADM concede) e aparecem JUNTO com a de progressão.
-    const MEDAL_INFO = {
-      bronze: {
-        name: 'Bronze',
-        desc: 'Primeira conquista de progressão na NØVA LEAGUE.',
-        req: '50 kills ou R$ 200,00 acumulados.'
-      },
-      prata: {
-        name: 'Prata',
-        desc: 'Jogador em ascensão na liga.',
-        req: '100 kills ou R$ 500,00 acumulados.'
-      },
-      ouro: {
-        name: 'Ouro',
-        desc: 'Elite da NØVA LEAGUE.',
-        req: '250 kills ou R$ 1.000,00 acumulados.'
-      },
-      honra: {
-        name: 'Honra',
-        desc: 'Reconhecimento por fidelidade e frequência na liga.',
-        req: 'Concedida manualmente pela organização — não tem número fixo.'
-      },
-      verificado: {
-        name: 'Verificado',
-        desc: 'Reconhecimento oficial de criador de conteúdo ou parceiro da NØVA LEAGUE.',
-        req: 'Concedida manualmente pela organização — não tem número fixo.'
-      }
-    };
-
-    // Qual tier de progressão (bronze/prata/ouro) o jogador já alcançou —
-    // retorna só a mais alta, elas se substituem.
-    function getProgressionTier(kills, earnings) {
-      kills = kills || 0;
-      earnings = parseFloat(earnings) || 0;
-      if (kills >= 250 || earnings >= 1000) return 'ouro';
-      if (kills >= 100 || earnings >= 500) return 'prata';
-      if (kills >= 50 || earnings >= 200) return 'bronze';
-      return null;
-    }
-
-    // Monta a fileira de medalhas de conquista pra exibir ao lado do nick
-    // (ex: Bronze - Honra - Verificado)
-    function renderAchievementMedals(player) {
-      const badges = [];
-      const tier = getProgressionTier(player.kills, player.earnings);
-      if (tier) badges.push(tier);
-      if (player.is_honra) badges.push('honra');
-      if (player.is_verificado) badges.push('verificado');
-
-      if (badges.length === 0) return '';
-
-      const iconsHTML = badges.map(key => `
-        <span onclick="event.stopPropagation(); showMedalInfo('${key}')" style="cursor: pointer; display: inline-flex;">
-          ${getAchievementMedalSVG(key, 18)}
-        </span>
-      `).join('');
-
-      return `<span style="display: inline-flex; align-items: center; gap: 4px; margin-left: 6px; vertical-align: middle;">${iconsHTML}</span>`;
-    }
-
-    function showMedalInfo(key) {
-      const info = MEDAL_INFO[key];
-      if (!info) return;
-      document.getElementById('medal-info-icon').innerHTML = getAchievementMedalSVG(key, 64);
-      document.getElementById('medal-info-name').innerText = info.name;
-      document.getElementById('medal-info-desc').innerText = info.desc;
-      document.getElementById('medal-info-req').innerHTML = `<strong>Requisito:</strong> ${info.req}`;
-      openModal('modal-medal-info');
-    }
-
-    async function toggleMedalFlag(playerId, field, newValue) {
-      if (!_supabase) { showToast('Banco de dados não configurado ainda.', 'danger'); return; }
-      const { error } = await _supabase.from('jogadores').update({ [field]: newValue }).eq('id', playerId);
-      if (error) { showToast('Erro ao atualizar medalha.', 'danger'); return; }
-      const player = state.players.find(p => String(p.id) === String(playerId));
-      if (player) player[field] = newValue;
-      showToast(newValue ? 'Medalha concedida!' : 'Medalha removida.');
-      renderAll();
-    }
-
-    function renderRankingList() {
-      const rankingContainer = document.getElementById('ranking-list-container');
-
-      // Só entra no ranking quem já tem valor > 0 na métrica da aba ativa
-      // (kills ou ganhos) — filtra jogador cadastrado que ainda não jogou nada.
-      const eligiblePlayers = state.players.filter(p =>
-        currentRankingType === 'earnings' ? parseFloat(p.earnings) > 0 : p.kills > 0
-      );
-
-      if (eligiblePlayers.length === 0) {
-        rankingContainer.innerHTML = `<div class="empty-state"><i class="fa-solid fa-trophy"></i><p>Nenhum participante no ranking ainda.</p></div>`;
-        return;
-      }
-
-      const sortedPlayers = [...eligiblePlayers].sort((a, b) =>
-        currentRankingType === 'earnings'
-          ? (parseFloat(b.earnings) - parseFloat(a.earnings))
-          : (b.kills - a.kills)
-      );
-
-      rankingContainer.innerHTML = sortedPlayers.map((p, idx) => {
-        const mainValue = currentRankingType === 'earnings'
-          ? `R$ ${parseFloat(p.earnings).toFixed(2)}`
-          : `${p.kills} Kills`;
-        const subValue = currentRankingType === 'earnings'
-          ? `${p.kills} kills`
-          : `R$ ${parseFloat(p.earnings).toFixed(2)}`;
-        const positionHTML = `<span style="font-family: var(--font-heading); font-size: 15px; color: var(--neon-gold); width: 26px; text-align: center; flex-shrink: 0;">#${idx + 1}</span>`;
-
-        return `
-          <div class="card" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; padding: 12px;">
-            <div style="display: flex; align-items: center; gap: 10px;">
-              ${positionHTML}
-              <div>
-                <strong style="color: #fff; font-size: 13px;">${escapeHTML(p.nick)}</strong>${renderAchievementMedals(p)}
-                <div style="font-size: 10px; color: var(--text-muted);">ID: ${escapeHTML(maskGameId(p.gameId))} | Partidas: ${p.matchesCount}</div>
-              </div>
-            </div>
-            <div style="text-align: right;">
-              <div style="font-family: var(--font-sub); font-weight: 700; color: var(--neon-gold); font-size: 16px;">
-                ${mainValue}
-              </div>
-              <div style="font-size: 10px; color: var(--text-muted);">${subValue}</div>
-            </div>
-          </div>
-        `;
-      }).join('');
-    }
-
-    function escapeHTML(str) {
-      if (!str) return '';
-      return String(str)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-    }
-
-    // Sem o Supabase configurado, o site avisa isso claramente em vez de
-    // fingir que está tudo certo salvando só no localStorage do navegador.
-    function updateConnectionBadge() {
-      const badge = document.getElementById('conn-status-badge');
-      const warningBox = document.getElementById('setup-warning-box');
-      if (_supabase) {
-        badge.textContent = 'ONLINE';
-        badge.className = 'conn-status online';
-        warningBox.classList.add('hidden');
-      } else {
-        badge.textContent = 'NÃO CONFIGURADO';
-        badge.className = 'conn-status offline';
-        warningBox.classList.remove('hidden');
-      }
-    }
-
-    function handleSecretAdminTrigger() {
-      adminClickCount++;
-      clearTimeout(adminClickTimer);
-      if (adminClickCount >= 5) {
-        adminClickCount = 0;
-        openAdminPanel();
-      } else {
-        adminClickTimer = setTimeout(() => { adminClickCount = 0; }, 2000);
-      }
-    }
-
-    window.addEventListener('keydown', (e) => {
-      if (e.ctrlKey && e.shiftKey && (e.key === 'A' || e.key === 'a')) {
-        e.preventDefault();
-        openAdminPanel();
-      }
-    });
-
-    // Busca os dados COMPARTILHADOS do Supabase — é isso que garante que
-    // todo mundo (ADM e jogadores, em qualquer dispositivo) vê os mesmos dados.
-    async function fetchFromDatabase() {
-      if (!_supabase) {
-        renderAll();
-        return;
-      }
-
-      // jogadores: sempre via view pública
-      const { data: p } = await _supabase.from('public_jogadores').select('*');
-      if (p) state.players = p;
-
-      const { data: m } = await _supabase.from('partidas').select('*').order('created_at', { ascending: false });
-      if (m) state.matches = m;
-
-      const { data: c } = await _supabase.from('cupons').select('*');
-      if (c) state.coupons = c;
-
-      const { data: msg } = await _supabase.from('mensagens').select('*').order('created_at', { ascending: false });
-      if (msg) state.messages = msg;
-
-      renderAll();
-    }
-
-    // Acesso do jogador: só o ID. Não existe senha nem conta a criar — o ADM
-    // cadastra o ID e a pessoa entra com ele. O banco devolve um token de sessão
-    // que fica salvo neste aparelho por 7 dias (cada aparelho tem o seu, então
-    // o mesmo ID pode estar aberto em vários lugares ao mesmo tempo).
-    async function handlePlayerLogin() {
-      if (!_supabase) {
-        showToast('Banco de dados não configurado ainda.', 'danger');
-        return;
-      }
-
-      const inputId = document.getElementById('player-login-id').value.trim();
-      if (!inputId) {
-        showToast('Digite seu ID do Free Fire.', 'danger');
-        return;
-      }
-
-      const { data, error } = await _supabase.rpc('player_login', { p_game_id: inputId });
-
-      if (error) {
-        showToast('Erro ao tentar entrar. Tente novamente.', 'danger');
-        return;
-      }
-
-      const result = data && data[0];
-      if (!result || result.error) {
-        showToast(result?.error || 'Não foi possível entrar.', 'danger');
-        return;
-      }
-
-      state.currentPlayer = {
-        id: result.id,
-        nick: result.nick,
-        gameId: result.gameId,
-        status: result.status,
-        kills: result.kills,
-        matchesCount: result.matchesCount,
-        earnings: result.earnings
-      };
-
-      if (result.session_token) {
-        localStorage.setItem(PLAYER_SESSION_KEY, result.session_token);
-      }
-
-      document.getElementById('player-login-id').value = '';
-      closeModal('modal-player-auth');
-      showToast(`Bem-vindo, ${escapeHTML(state.currentPlayer.nick)}!`, 'success');
-      await fetchFromDatabase();
-    }
-
-    async function playerLogout() {
-      const token = localStorage.getItem(PLAYER_SESSION_KEY);
-      if (_supabase && token) {
-        await _supabase.rpc('player_session_logout', { p_token: token });
-      }
-      localStorage.removeItem(PLAYER_SESSION_KEY);
-      state.currentPlayer = null;
-      showToast('Sessão encerrada.');
-      renderAll();
-    }
-
-    // Login de ADM via Supabase Auth de verdade — nenhuma senha fica
-    // escrita no HTML público. O e-mail/senha são criados direto no
-    // painel do Supabase (Authentication > Users).
-    async function handleAdminAuth() {
-      if (!_supabase) {
-        showToast('Banco de dados não configurado ainda.', 'danger');
-        return;
-      }
-
-      const email = document.getElementById('admin-user-input').value.trim();
-      const pass = document.getElementById('admin-pass-input').value.trim();
-
-      const { data, error } = await _supabase.auth.signInWithPassword({ email, password: pass });
-
-      if (error || !data?.user) {
-        showToast('Credenciais de ADM inválidas!', 'danger');
-        return;
-      }
-
-      const { data: adminCheck } = await _supabase
-        .from('admin_users')
-        .select('role')
-        .eq('user_id', data.user.id)
-        .maybeSingle();
-
-      if (!adminCheck) {
-        await _supabase.auth.signOut();
-        showToast('Este login não tem permissão de administrador.', 'danger');
-        return;
-      }
-
-      state.isAdminAuthenticated = true;
-      closeModal('modal-admin-auth');
-      showToast('Autenticado como Administrador!', 'success');
-      openAdminPanel();
-      await fetchFromDatabase();
-    }
-
-    async function adminLogout() {
-      if (_supabase) await _supabase.auth.signOut();
-      state.isAdminAuthenticated = false;
-      showToast('Sessão ADM encerrada.');
-      switchTab('view-home');
-    }
-
-    function openAdminPanel() {
-      if (!state.isAdminAuthenticated) {
-        openModal('modal-admin-auth');
-        return;
-      }
-      switchTab('view-admin');
-    }
-
-    function switchTab(tabId) {
-      if (tabId === 'view-admin' && !state.isAdminAuthenticated) {
-        openModal('modal-admin-auth');
-        return;
-      }
-
-      const tabs = ['view-home', 'view-ranking', 'view-matches', 'view-coupons', 'view-profile', 'view-admin'];
-      tabs.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.classList.add('hidden');
-      });
-
-      document.getElementById(tabId).classList.remove('hidden');
-
-      document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
-      const activeNav = document.getElementById('nav-' + tabId.replace('view-', ''));
-      if (activeNav) activeNav.classList.add('active');
-    }
-
-    function switchAdminSubtab(sub, element) {
-      document.querySelectorAll('.admin-tile').forEach(t => t.classList.remove('active'));
-      element.classList.add('active');
-
-      document.getElementById('admin-sub-players').classList.add('hidden');
-      document.getElementById('admin-sub-matches').classList.add('hidden');
-      document.getElementById('admin-sub-coupons').classList.add('hidden');
-      document.getElementById('admin-sub-messages').classList.add('hidden');
-
-      if (sub === 'players') document.getElementById('admin-sub-players').classList.remove('hidden');
-      if (sub === 'matches') document.getElementById('admin-sub-matches').classList.remove('hidden');
-      if (sub === 'coupons') document.getElementById('admin-sub-coupons').classList.remove('hidden');
-      if (sub === 'messages') document.getElementById('admin-sub-messages').classList.remove('hidden');
-    }
-
-    function openModal(id) { document.getElementById(id).classList.add('active'); }
-    function closeModal(id) { document.getElementById(id).classList.remove('active'); }
-
-    function showToast(msg, type = 'success', durationMs = 3000) {
-      const container = document.getElementById('toast-container');
-      const toast = document.createElement('div');
-      toast.className = 'toast';
-      const isDanger = type === 'danger';
-      const chipClass = isDanger ? 'danger' : 'success';
-      const icon = isDanger ? 'fa-circle-xmark' : 'fa-circle-check';
-      toast.innerHTML = `
-        <div class="toast-icon-chip ${chipClass}"><i class="fa-solid ${icon}"></i></div>
-        <div class="toast-text">${msg}</div>
-        <button class="toast-close" onclick="this.closest('.toast').remove()"><i class="fa-solid fa-xmark"></i></button>
-      `;
-      container.appendChild(toast);
-      setTimeout(() => toast.remove(), durationMs);
-    }
-
-    async function handleAddPlayer() {
-      if (!_supabase) { showToast('Banco de dados não configurado ainda.', 'danger'); return; }
-
-      const nick = document.getElementById('new-player-nick').value.trim();
-      const gameId = document.getElementById('new-player-id').value.trim();
-
-      if (state.players.some(p => String(p.gameId) === String(gameId))) {
-        showToast('Este ID já está registrado no servidor!', 'danger');
-        return;
-      }
-
-      const newPlayer = {
-        nick: nick,
-        gameId: gameId,
-        status: 'normal',
-        kills: 0,
-        matchesCount: 0,
-        earnings: 0.0
-      };
-
-      const { error } = await _supabase.from('jogadores').insert([newPlayer]);
-      if (error) { showToast('Erro ao gravar jogador no banco de dados.', 'danger'); return; }
-
-      closeModal('modal-add-player');
-      document.getElementById('new-player-nick').value = '';
-      document.getElementById('new-player-id').value = '';
-      showToast('✓ ID registrado no servidor com sucesso!');
-      await fetchFromDatabase();
-    }
-
-    async function handleBulkPlayersImport() {
-      if (!_supabase) { showToast('Banco de dados não configurado ainda.', 'danger'); return; }
-
-      const rawText = document.getElementById('bulk-players-input').value.trim();
-
-      if (!rawText) {
-        showToast('Cole a lista de jogadores!', 'danger');
-        return;
-      }
-
-      const lines = rawText.split('\n');
-      const playersToInsert = [];
-      let addedCount = 0;
-      let skippedCount = 0;
-
-      for (let line of lines) {
-        line = line.trim();
-        if (!line) continue;
-
-        const parts = line.split(/[,;\t]/);
-        if (parts.length >= 2) {
-          const gameId = parts[0].trim();
-          const nick = parts.slice(1).join(',').trim().replace(/^["']|["']$/g, '');
-
-          if (!gameId || !nick) continue;
-
-          const existsInState = state.players.some(p => String(p.gameId) === String(gameId));
-          const existsInBatch = playersToInsert.some(p => String(p.gameId) === String(gameId));
-
-          if (existsInState || existsInBatch) {
-            skippedCount++;
-            continue;
-          }
-
-          playersToInsert.push({
-            nick: nick,
-            gameId: gameId,
-            status: 'normal',
-            kills: 0,
-            matchesCount: 0,
-            earnings: 0.0
-          });
-          addedCount++;
-        }
-      }
-
-      if (playersToInsert.length > 0) {
-        const { error } = await _supabase.from('jogadores').insert(playersToInsert);
-        if (error) {
-          showToast('Erro ao cadastrar jogadores no banco de dados.', 'danger');
-          return;
-        }
-
-        closeModal('modal-bulk-players-import');
-        document.getElementById('bulk-players-input').value = '';
-
-        let msg = `✓ ${addedCount} novos jogadores cadastrados!`;
-        if (skippedCount > 0) msg += ` (${skippedCount} ignorados por já existirem)`;
-        showToast(msg, 'success', 6000);
-        await fetchFromDatabase();
-      } else {
-        showToast(skippedCount > 0 ? 'Todos os IDs informados já estão cadastrados!' : 'Nenhum formato válido encontrado. Use: ID, NICK', 'danger');
-      }
-    }
-
-    async function updatePlayerStatus(playerId, newStatus) {
-      if (!_supabase) { showToast('Banco de dados não configurado ainda.', 'danger'); return; }
-
-      if (newStatus === 'banned') {
-        const confirmDelete = confirm('⚠️ ATENÇÃO: Deseja realmente dar BAN PERMANENTE? Esta ação exclui o jogador do banco.');
-        if (!confirmDelete) {
-          renderAll();
-          return;
-        }
-
-        await _supabase.from('jogadores').delete().eq('id', playerId);
-
-        if (state.currentPlayer && String(state.currentPlayer.id) === String(playerId)) {
-          state.currentPlayer = null;
-        }
-
-        showToast('🔴 Jogador banido e removido!', 'danger');
-        await fetchFromDatabase();
-        return;
-      }
-
-      const player = state.players.find(p => String(p.id) === String(playerId));
-      if (player) {
-        await _supabase.from('jogadores').update({ status: newStatus }).eq('id', playerId);
-        player.status = newStatus;
-        showToast(`Status de ${escapeHTML(player.nick)} atualizado!`);
-        renderAll();
-      }
-    }
-
-    function openAddMatchModal() {
-      if (state.players.length === 0) {
-        showToast('Cadastre ao menos um jogador antes de criar partidas!', 'danger');
-        return;
-      }
-      document.getElementById('match-players-container').innerHTML = '';
-
-      const now = new Date();
-      now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-      document.getElementById('match-datetime').value = now.toISOString().slice(0, 16);
-
-      addPlayerRowToMatch();
-      openModal('modal-add-match');
-    }
-
-    function addPlayerRowToMatch() {
-      const container = document.getElementById('match-players-container');
-      const rowId = 'player-row-' + Date.now() + Math.random().toString(36).substring(2, 5);
-
-      const options = state.players.map(p => `<option value="${p.id}">${escapeHTML(p.nick)} (ID: ${escapeHTML(p.gameId)})</option>`).join('');
-
-      const row = document.createElement('div');
-      row.className = 'player-entry-card';
-      row.id = rowId;
-      row.innerHTML = `
-        <button type="button" class="btn-remove-row" onclick="removePlayerRow('${rowId}')"><i class="fa-solid fa-xmark"></i></button>
-        <div class="form-group">
-          <label>JOGADOR</label>
-          <select class="form-control match-p-id" required>${options}</select>
-        </div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-          <div class="form-group">
-            <label>KILLS</label>
-            <input type="number" class="form-control match-p-kills" value="0" min="0" required>
-          </div>
-          <div class="form-group">
-            <label>POSIÇÃO</label>
-            <input type="number" class="form-control match-p-pos" value="1" min="1" required>
-          </div>
-        </div>
-        <div class="form-group">
-          <label>VALOR/KILL (R$)</label>
-          <input type="number" class="form-control match-p-valkill" value="4.00" step="0.50" required>
-        </div>
-      `;
-      container.appendChild(row);
-    }
-
-    function removePlayerRow(rowId) {
-      const rows = document.querySelectorAll('.player-entry-card');
-      if (rows.length <= 1) {
-        showToast('A partida deve conter ao menos 1 jogador.', 'danger');
-        return;
-      }
-      document.getElementById(rowId).remove();
-    }
-
-    async function handleAddMatch() {
-      if (!_supabase) { showToast('Banco de dados não configurado ainda.', 'danger'); return; }
-
-      const matchNum = document.getElementById('match-number').value.trim();
-      const datetimeInput = document.getElementById('match-datetime').value;
-      const top1Bonus = parseFloat(document.getElementById('match-top1-bonus').value) || 0;
-      const top2Bonus = parseFloat(document.getElementById('match-top2-bonus').value) || 0;
-      const rows = document.querySelectorAll('.player-entry-card');
-
-      if (rows.length === 0) {
-        showToast('Adicione pelo menos um jogador!', 'danger');
-        return;
-      }
-
-      const selectedPlayerIds = [];
-      for (const row of rows) {
-        const pId = row.querySelector('.match-p-id').value;
-        if (selectedPlayerIds.includes(pId)) {
-          showToast('Erro: O mesmo jogador foi selecionado mais de uma vez!', 'danger');
-          return;
-        }
-        selectedPlayerIds.push(pId);
-      }
-
-      let formattedDate = new Date().toLocaleDateString('pt-BR') + ' ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-      if (datetimeInput) {
-        const dtObj = new Date(datetimeInput);
-        formattedDate = dtObj.toLocaleDateString('pt-BR') + ' às ' + dtObj.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-      }
-
-      const matchesToInsert = [];
-      const rpcEntries = [];
-
-      for (const row of rows) {
-        const playerId = row.querySelector('.match-p-id').value;
-        const kills = parseInt(row.querySelector('.match-p-kills').value) || 0;
-        const pos = parseInt(row.querySelector('.match-p-pos').value) || 1;
-        const killVal = parseFloat(row.querySelector('.match-p-valkill').value) || 0;
-
-        let bonus = 0;
-        if (pos === 1) bonus = top1Bonus;
-        else if (pos === 2) bonus = top2Bonus;
-
-        const player = state.players.find(p => String(p.id) === String(playerId));
-        if (!player) continue;
-
-        rpcEntries.push({ playerId: player.id, kills, pos, killValue: killVal, bonus });
-      }
-
-      const { error: matchError } = await _supabase.rpc('add_match_with_players', {
-        p_match_number: matchNum,
-        p_match_date: formattedDate,
-        p_entries: rpcEntries
-      });
-      if (matchError) { showToast('Erro ao salvar a partida.', 'danger'); return; }
-
-      closeModal('modal-add-match');
-      showToast(`✓ Partida "${escapeHTML(matchNum)}" registrada!`);
-      await fetchFromDatabase();
-    }
-
-    async function handleBulkImport() {
-      if (!_supabase) { showToast('Banco de dados não configurado ainda.', 'danger'); return; }
-
-      const matchNum = document.getElementById('bulk-match-number').value.trim();
-      const datetimeInput = document.getElementById('bulk-match-datetime').value;
-      const rawText = document.getElementById('bulk-data-input').value.trim();
-      const killVal = parseFloat(document.getElementById('bulk-kill-val').value) || 0;
-      const top1Val = parseFloat(document.getElementById('bulk-top1-val').value) || 0;
-      const top2Val = parseFloat(document.getElementById('bulk-top2-val').value) || 0;
-
-      if (!matchNum || !rawText) {
-        showToast('Preencha os campos obrigatórios!', 'danger');
-        return;
-      }
-
-      let formattedDate = new Date().toLocaleDateString('pt-BR') + ' ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-      if (datetimeInput) {
-        const dtObj = new Date(datetimeInput);
-        formattedDate = dtObj.toLocaleDateString('pt-BR') + ' às ' + dtObj.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-      }
-
-      const lines = rawText.split('\n');
-      const rpcEntries = [];
-
-      for (let line of lines) {
-        line = line.trim();
-        if (!line) continue;
-
-        const parts = line.split(/[,;\t]+/).map(s => s.trim());
-        const gameId = parts[0];
-        const kills = parseInt(parts[1]) || 0;
-        const pos = parseInt(parts[2]) || 1;
-        if (!gameId) continue;
-
-        rpcEntries.push({ gameId, kills, pos });
-      }
-
-      if (rpcEntries.length === 0) {
-        showToast('Nenhuma linha válida encontrada.', 'danger');
-        return;
-      }
-
-      const { data, error } = await _supabase.rpc('bulk_import_matches', {
-        p_match_number: matchNum,
-        p_match_date: formattedDate,
-        p_kill_value: killVal,
-        p_top1_value: top1Val,
-        p_top2_value: top2Val,
-        p_entries: rpcEntries
-      });
-
-      if (error) {
-        showToast('Erro ao importar partidas.', 'danger');
-        return;
-      }
-
-      const result = data && data[0];
-      const importedCount = result ? result.imported_count : 0;
-      const notFound = result && result.not_found ? result.not_found : [];
-
-      if (importedCount > 0) {
-        closeModal('modal-bulk-import');
-        document.getElementById('bulk-data-input').value = '';
-        let msg = `✓ ${importedCount} resultados importados em uma única operação!`;
-        if (notFound.length > 0) msg += ` (${notFound.length} ID(s) não encontrado(s): ${notFound.join(', ')})`;
-        showToast(msg, 'success', 6000);
-        await fetchFromDatabase();
-      } else {
-        showToast('Nenhum ID correspondente encontrado.', 'danger');
-      }
-    }
-
-    // REMOVER PARTIDA PELO ADM
-    // Abre o modal de edição já preenchido com os dados atuais da partida
-    function openEditMatchModal(groupKey) {
-      const groupMatches = state.matches.filter(m => (m.number + '_' + (m.date || 'sem_data')) === groupKey);
-      if (groupMatches.length === 0) {
-        showToast('Partida não encontrada.', 'danger');
-        return;
-      }
-
-      document.getElementById('edit-match-number').value = groupMatches[0].number;
-      document.getElementById('edit-match-date').value = groupMatches[0].date || '';
-
-      const container = document.getElementById('edit-match-players-container');
-      container.innerHTML = groupMatches.map(m => `
-        <div class="player-entry-card" data-match-id="${m.id}">
-          <div style="font-size: 12px; font-weight: 700; color: #fff; margin-bottom: 8px;">
-            ${escapeHTML(m.playerNick)} <span style="color: var(--text-muted); font-weight: 400;">// ${escapeHTML(m.playerGameId)}</span>
-          </div>
-          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
-            <div class="form-group" style="margin-bottom: 0;">
-              <label>KILLS</label>
-              <input type="number" class="form-control edit-p-kills" value="${m.kills}" min="0" required>
-            </div>
-            <div class="form-group" style="margin-bottom: 0;">
-              <label>POSIÇÃO</label>
-              <input type="number" class="form-control edit-p-pos" value="${m.pos}" min="1" required>
-            </div>
-            <div class="form-group" style="margin-bottom: 0;">
-              <label>TOTAL R$</label>
-              <input type="number" class="form-control edit-p-total" value="${parseFloat(m.total).toFixed(2)}" step="0.5" required>
-            </div>
-          </div>
-        </div>
-      `).join('');
-
-      openModal('modal-edit-match');
-    }
-
-    // Salva as alterações: reverte o valor antigo de cada jogador e aplica
-    // o novo, tudo numa função só no banco (evita ficar inconsistente
-    // se a conexão cair no meio de várias chamadas separadas).
-    async function handleEditMatch() {
-      if (!_supabase) { showToast('Banco de dados não configurado ainda.', 'danger'); return; }
-
-      const newNumber = document.getElementById('edit-match-number').value.trim();
-      const newDate = document.getElementById('edit-match-date').value.trim();
-      const rows = document.querySelectorAll('#edit-match-players-container .player-entry-card');
-
-      if (rows.length === 0) {
-        showToast('Nada pra salvar.', 'danger');
-        return;
-      }
-
-      const entries = Array.from(rows).map(row => ({
-        matchId: row.dataset.matchId,
-        kills: parseInt(row.querySelector('.edit-p-kills').value) || 0,
-        pos: parseInt(row.querySelector('.edit-p-pos').value) || 1,
-        total: parseFloat(row.querySelector('.edit-p-total').value) || 0
-      }));
-
-      const { error } = await _supabase.rpc('edit_match_group', {
-        p_new_number: newNumber,
-        p_new_date: newDate,
-        p_entries: entries
-      });
-
-      if (error) {
-        showToast('Erro ao salvar as alterações.', 'danger');
-        return;
-      }
-
-      closeModal('modal-edit-match');
-      showToast('✓ Partida atualizada!');
-      await fetchFromDatabase();
-    }
-
-    async function deleteMatchGroup(groupKey) {
-      if (!_supabase) { showToast('Banco de dados não configurado ainda.', 'danger'); return; }
-      if (!confirm('⚠️ Deseja realmente excluir esta partida? Os pontos e prêmios acumulados pelos jogadores nesta partida serão revertidos.')) return;
-
-      const sample = state.matches.find(m => (m.number + '_' + (m.date || 'sem_data')) === groupKey);
-      if (!sample) return;
-
-      const { error } = await _supabase.rpc('delete_match_group', {
-        p_number: sample.number,
-        p_date: sample.date || null
-      });
-
-      if (error) { showToast('Erro ao excluir a partida.', 'danger'); return; }
-
-      showToast('Partida removida com sucesso!', 'danger');
-      await fetchFromDatabase();
-    }
-
-    async function handleAddCoupon() {
-      if (!_supabase) { showToast('Banco de dados não configurado ainda.', 'danger'); return; }
-
-      const code = document.getElementById('coupon-code').value.trim();
-      const discount = document.getElementById('coupon-discount').value.trim();
-      const valid = document.getElementById('coupon-valid').value.trim();
-
-      const { error } = await _supabase.from('cupons').insert([{ code, discount, valid }]);
-      if (error) { showToast('Erro ao criar cupom.', 'danger'); return; }
-
-      closeModal('modal-add-coupon');
-      document.getElementById('coupon-code').value = '';
-      document.getElementById('coupon-discount').value = '';
-      document.getElementById('coupon-valid').value = '';
-      showToast('✓ Cupom adicionado!');
-      await fetchFromDatabase();
-    }
-
-    // REMOVER CUPOM PELO ADM
-    async function deleteCoupon(couponId) {
-      if (!_supabase) { showToast('Banco de dados não configurado ainda.', 'danger'); return; }
-      if (!confirm('Deseja realmente remover este cupom?')) return;
-
-      await _supabase.from('cupons').delete().eq('id', couponId);
-      showToast('Cupom removido com sucesso!', 'danger');
-      await fetchFromDatabase();
-    }
-
-    function copyCoupon(code, btn) {
-      navigator.clipboard.writeText(code);
-      btn.innerText = '✓ COPIADO';
-      showToast(`Cupom ${code} copiado!`);
-      setTimeout(() => { btn.innerText = 'COPIAR CÓDIGO'; }, 2000);
-    }
-
-    async function handleSendMessage() {
-      if (!_supabase) { showToast('Banco de dados não configurado ainda.', 'danger'); return; }
-
-      const targetId = document.getElementById('msg-recipient').value;
-      const text = document.getElementById('msg-text').value.trim();
-
-      if (!text) {
-        showToast('Digite a mensagem!', 'danger');
-        return;
-      }
-
-      const currentDate = new Date().toLocaleDateString('pt-BR') + ' às ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-
-      const { error } = await _supabase.from('mensagens').insert([{
-        recipientId: targetId,
-        text: text,
-        date: currentDate,
-        readBy: []
-      }]);
-
-      if (error) { showToast('Erro ao enviar comunicado.', 'danger'); return; }
-
-      document.getElementById('msg-text').value = '';
-      showToast('📢 Comunicado enviado com sucesso!');
-      await fetchFromDatabase();
-    }
-
-    async function deleteMessage(msgId) {
-      if (!_supabase) { showToast('Banco de dados não configurado ainda.', 'danger'); return; }
-      if (!confirm('Deseja excluir este comunicado?')) return;
-
-      await _supabase.from('mensagens').delete().eq('id', msgId);
-      showToast('Comunicado removido.');
-      await fetchFromDatabase();
-    }
-
-    async function markMessageAsRead(msgId) {
-      if (!state.currentPlayer || !_supabase) return;
-
-      await _supabase.rpc('mark_message_read', {
-        p_message_id: msgId,
-        p_player_id: state.currentPlayer.id
-      });
-
-      await fetchFromDatabase();
-    }
-
-    function toggleMatchGroup(id) {
-      const target = document.getElementById(id);
-      const icon = document.getElementById('icon-' + id);
-      if (target) {
-        target.classList.toggle('hidden');
-        if (icon) {
-          icon.classList.toggle('fa-chevron-down');
-          icon.classList.toggle('fa-chevron-up');
-        }
-      }
-    }
-
-    function getGroupedMatches(filterGameId = null) {
-      const groups = {};
-
-      let sourceMatches = state.matches;
-      if (filterGameId) {
-        sourceMatches = state.matches.filter(m => String(m.playerGameId).includes(String(filterGameId)));
-      }
-
-      sourceMatches.forEach(m => {
-        const groupKey = m.number + '_' + (m.date || 'sem_data');
-        if (!groups[groupKey]) {
-          groups[groupKey] = {
-            key: groupKey,
-            number: m.number,
-            date: m.date || 'Data não informada',
-            players: []
-          };
-        }
-        groups[groupKey].players.push(m);
-      });
-
-      return Object.values(groups);
-    }
-
-    // Mostra só os 4 primeiros dígitos do ID, resto vira asterisco.
-    // maskMode 'smart': mascara, exceto se for o próprio jogador logado
-    // ou se o filtro digitado bater EXATAMENTE com o ID (prova que a pessoa já sabe o ID).
-    function maskGameId(gameId) {
-      const str = String(gameId || '');
-      if (str.length <= 4) return str;
-      return str.slice(0, 4) + '*'.repeat(str.length - 4);
-    }
-
-    function renderMatchGroupHTML(group, groupIndex, isAdmin = false, maskMode = 'none', exactFilterValue = null) {
-      const sortedPlayers = [...group.players].sort((a, b) => a.pos - b.pos);
-
-      let myIndex = -1;
-      if (state.currentPlayer) {
-        myIndex = sortedPlayers.findIndex(p => String(p.playerGameId) === String(state.currentPlayer.gameId));
-      }
-
-      const displayId = (gameId) => {
-        if (maskMode !== 'smart') return escapeHTML(gameId);
-        const isOwn = state.currentPlayer && String(gameId) === String(state.currentPlayer.gameId);
-        const matchesFilter = exactFilterValue && String(gameId) === String(exactFilterValue).trim();
-        return (isOwn || matchesFilter) ? escapeHTML(gameId) : escapeHTML(maskGameId(gameId));
-      };
-
-      let meHighlightedHTML = '';
-      if (myIndex !== -1) {
-        const myRecord = sortedPlayers[myIndex];
-        meHighlightedHTML = `
-          <div style="margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px dashed var(--neon-gold);">
-            <div style="font-size: 11px; color: var(--neon-gold); font-weight: 700; margin-bottom: 4px;">Sua Posição nesta Partida:</div>
-            <div class="player-row-item highlight-me">
-              <div>
-                <span class="player-row-title">#${myRecord.pos} ${escapeHTML(myRecord.playerNick)} // ${displayId(myRecord.playerGameId)}</span>
-              </div>
-              <div style="text-align: right;">
-                <strong style="color: var(--neon-gold);">${myRecord.kills} Kills</strong>
-                <div style="font-size: 11px; color: var(--neon-green);">R$ ${parseFloat(myRecord.total).toFixed(2)}</div>
-              </div>
-            </div>
-          </div>
-        `;
-      }
-
-      const allPlayersListHTML = sortedPlayers.map(p => {
-        const isMe = state.currentPlayer && String(p.playerGameId) === String(state.currentPlayer.gameId);
-        return `
-          <div class="player-row-item ${isMe ? 'highlight-me' : ''}">
-            <div>
-              <span class="player-row-title">#${p.pos} ${escapeHTML(p.playerNick)} // ${displayId(p.playerGameId)}</span>
-            </div>
-            <div style="text-align: right;">
-              <strong style="color: var(--neon-gold);">${p.kills} Kills</strong>
-              <div style="font-size: 11px; color: var(--neon-green);">R$ ${parseFloat(p.total).toFixed(2)}</div>
-            </div>
-          </div>
-        `;
-      }).join('');
-
-      const accordionId = 'match-details-' + groupIndex;
-      const deleteBtn = isAdmin ? `
-        <button class="btn-copy" style="background: rgba(46,204,113,0.2); color: var(--neon-green); padding: 4px 8px; font-size: 10px;" onclick="event.stopPropagation(); openEditMatchModal('${escapeHTML(group.key)}')">
-          <i class="fa-solid fa-pen"></i> EDITAR
-        </button>
-        <button class="btn-copy" style="background: rgba(231,76,60,0.2); color: var(--neon-red); padding: 4px 8px; font-size: 10px;" onclick="event.stopPropagation(); deleteMatchGroup('${escapeHTML(group.key)}')">
-          <i class="fa-solid fa-trash"></i> EXCLUIR
-        </button>
-      ` : '';
-
-      return `
-        <div class="match-group-card">
-          <button class="match-header-btn" onclick="toggleMatchGroup('${accordionId}')">
-            <div>
-              <h4 style="font-family: var(--font-sub); font-size: 15px; color: var(--neon-gold);">${escapeHTML(group.number)}</h4>
-              <p style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">
-                <i class="fa-regular fa-clock"></i> ${escapeHTML(group.date)} | <i class="fa-solid fa-users"></i> ${group.players.length} Jogadores
-              </p>
-            </div>
-            <div style="display: flex; align-items: center; gap: 8px;">
-              ${deleteBtn}
-              <i class="fa-solid fa-chevron-down" id="icon-${accordionId}" style="color: var(--neon-gold);"></i>
-            </div>
-          </button>
-
-          <div id="${accordionId}" class="match-details-box hidden">
-            ${meHighlightedHTML}
-            <div style="font-size: 11px; color: var(--text-muted); font-weight: 700; margin-bottom: 6px;">
-              Lista de #${sortedPlayers[0]?.pos || 1} a #${sortedPlayers[sortedPlayers.length - 1]?.pos || sortedPlayers.length}:
-            </div>
-            ${allPlayersListHTML}
-          </div>
-        </div>
-      `;
-    }
-
-    function renderMatchesOnly() {
-      const fullMatchesList = document.getElementById('full-matches-list');
-      const filterId = document.getElementById('filter-match-id')?.value.trim();
-      const allGroups = getGroupedMatches(filterId);
-
-      const totalPages = Math.ceil(allGroups.length / MATCHES_PER_PAGE) || 1;
-      if (currentMatchPage > totalPages) currentMatchPage = totalPages;
-      if (currentMatchPage < 1) currentMatchPage = 1;
-
-      const startIndex = (currentMatchPage - 1) * MATCHES_PER_PAGE;
-      const paginatedGroups = allGroups.slice(startIndex, startIndex + MATCHES_PER_PAGE);
-
-      if (paginatedGroups.length === 0) {
-        fullMatchesList.innerHTML = `<div class="empty-state"><i class="fa-solid fa-magnifying-glass"></i><p>${filterId ? 'Nenhum resultado para o ID ' + escapeHTML(filterId) : 'Nenhuma partida registrada.'}</p></div>`;
-      } else {
-        fullMatchesList.innerHTML = paginatedGroups.map((g, idx) => renderMatchGroupHTML(g, 'full-' + idx, false, 'smart', filterId)).join('');
-      }
-
-      document.getElementById('page-indicator').innerText = `Página ${currentMatchPage} de ${totalPages}`;
-      document.getElementById('btn-prev-page').disabled = currentMatchPage === 1;
-      document.getElementById('btn-next-page').disabled = currentMatchPage === totalPages;
-    }
-
-    function changeMatchPage(direction) {
-      currentMatchPage += direction;
-      renderMatchesOnly();
-    }
-
-    // Tabela de jogadores do ADM: busca por nick/ID + ordenada por quem mais
-    // jogou primeiro. Função própria pra não precisar rodar o renderAll()
-    // inteiro a cada tecla digitada na busca.
-    function renderAdminPlayersTable() {
-      const playersTable = document.getElementById('admin-players-table-body');
-      if (!playersTable) return;
-
-      const playerSearchTerm = (document.getElementById('admin-player-search')?.value || '').trim().toLowerCase();
-
-      const visiblePlayers = state.players
-        .filter(p => !playerSearchTerm || p.nick.toLowerCase().includes(playerSearchTerm) || String(p.gameId).includes(playerSearchTerm))
-        .sort((a, b) => (b.matchesCount || 0) - (a.matchesCount || 0));
-
-      if (state.players.length === 0) {
-        playersTable.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Nenhum ID liberado no banco.</td></tr>`;
-        return;
-      }
-      if (visiblePlayers.length === 0) {
-        playersTable.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Nenhum jogador encontrado para "${escapeHTML(playerSearchTerm)}".</td></tr>`;
-        return;
-      }
-
-      playersTable.innerHTML = visiblePlayers.map(p => {
-        const st = p.status || 'normal';
-        const autoTier = getProgressionTier(p.kills, p.earnings);
-        const tierIcon = autoTier ? getAchievementMedalSVG(autoTier, 20) : '<span style="font-size:10px; color: var(--text-muted);">—</span>';
-        const honraOn = !!p.is_honra;
-        const verifOn = !!p.is_verificado;
-        return `
-          <tr>
-            <td>
-              <strong>${escapeHTML(p.nick)}</strong>
-              <div style="font-size: 10px; color: var(--text-muted);">ID: ${escapeHTML(p.gameId)}</div>
-            </td>
-            <td>
-              <select class="status-select" onchange="updatePlayerStatus('${p.id}', this.value)">
-                <option value="normal" ${st === 'normal' ? 'selected' : ''}>🟢 Normal</option>
-                <option value="warning1" ${st === 'warning1' ? 'selected' : ''}>🟡 1º Aviso</option>
-                <option value="warning2" ${st === 'warning2' ? 'selected' : ''}>🟠 2º Aviso</option>
-                <option value="banned">🔴 Ban (Excluir)</option>
-              </select>
-            </td>
-            <td>
-              <div style="display: flex; align-items: center; gap: 8px;">
-                <span title="Tier automático (kills/ganhos)">${tierIcon}</span>
-                <button class="btn-icon" style="width: 24px; height: 24px; opacity: ${honraOn ? '1' : '0.35'};" title="Honra (manual)" onclick="toggleMedalFlag('${p.id}', 'is_honra', ${!honraOn})">${getHonraSVG(16)}</button>
-                <button class="btn-icon" style="width: 24px; height: 24px; opacity: ${verifOn ? '1' : '0.35'};" title="Verificado (manual)" onclick="toggleMedalFlag('${p.id}', 'is_verificado', ${!verifOn})">${getVerificadoSVG(16)}</button>
-              </div>
-            </td>
-            <td style="text-align: center; font-weight: 700; color: #fff;">${p.matchesCount || 0}</td>
-            <td><span style="color: var(--neon-green); font-weight: 700;">R$ ${parseFloat(p.earnings).toFixed(2)}</span></td>
-          </tr>
-        `;
-      }).join('');
-    }
-
-    function renderAll() {
-      updateConnectionBadge();
-
-      const loggedOutView = document.getElementById('player-logged-out-view');
-      const loggedInView = document.getElementById('player-logged-in-view');
-
-      if (!state.currentPlayer) {
-        loggedOutView.classList.remove('hidden');
-        loggedInView.classList.add('hidden');
-      } else {
-        loggedOutView.classList.add('hidden');
-        loggedInView.classList.remove('hidden');
-
-        const p = state.currentPlayer;
-        document.getElementById('dash-player-nick').innerText = p.nick;
-        document.getElementById('dash-player-id').innerText = p.gameId;
-        document.getElementById('dash-kills').innerText = p.kills;
-        document.getElementById('dash-matches').innerText = p.matchesCount;
-        document.getElementById('dash-earnings').innerText = `R$ ${parseFloat(p.earnings).toFixed(2)}`;
-
-        const sorted = [...state.players].sort((a, b) => b.kills - a.kills);
-        const rankIndex = sorted.findIndex(item => String(item.id) === String(p.id));
-        const rankPos = rankIndex !== -1 ? rankIndex + 1 : null;
-        document.getElementById('dash-rank').innerText = rankPos ? `#${rankPos}` : '--';
-
-        const myGroups = getGroupedMatches(p.gameId);
-        const homeMatchesList = document.getElementById('home-matches-list');
-
-        if (myGroups.length === 0) {
-          homeMatchesList.innerHTML = `<div class="empty-state"><i class="fa-solid fa-gamepad"></i><p>Nenhum resultado registrado para seu ID.</p></div>`;
-        } else {
-          homeMatchesList.innerHTML = myGroups.map((g, idx) => renderMatchGroupHTML(g, 'home-' + idx)).join('');
-        }
-      }
-
-      renderMatchesOnly();
-
-      // RANKING
-      renderRankingList();
-
-      // CUPONS PARA JOGADORES
-      const couponsContainer = document.getElementById('coupons-list-container');
-      if (state.coupons.length === 0) {
-        couponsContainer.innerHTML = `<div class="empty-state"><i class="fa-solid fa-ticket"></i><p>Nenhum cupom ativo no momento.</p></div>`;
-      } else {
-        couponsContainer.innerHTML = state.coupons.map(c => `
-          <div class="coupon-card">
-            <div>
-              <div class="coupon-code">${escapeHTML(c.code)}</div>
-              <div style="font-size: 12px; font-weight: 700; color: var(--neon-green);">${escapeHTML(c.discount)}</div>
-              <div style="font-size: 10px; color: var(--text-muted); margin-top: 2px;">Validade: ${escapeHTML(c.valid)}</div>
-            </div>
-            <button class="btn-copy" onclick="copyCoupon('${escapeHTML(c.code)}', this)">COPIAR CÓDIGO</button>
-          </div>
-        `).join('');
-      }
-
-      // PERFIL E NOTIFICAÇÕES DE AVISOS
-      const profileContent = document.getElementById('profile-content');
-      let hasNotificationBadge = false;
-
-      if (state.currentPlayer) {
-        const pStatus = state.currentPlayer.status || 'normal';
-        let statusBadgeHTML = '<span class="badge badge-normal">🟢 NORMAL</span>';
-        let warningBoxHTML = '';
-
-        if (pStatus === 'warning1') {
-          hasNotificationBadge = true;
-          statusBadgeHTML = '<span class="badge badge-warning1">🟡 1º AVISO</span>';
-          warningBoxHTML = `
-            <div class="alert-card warning1">
-              <i class="fa-solid fa-triangle-exclamation" style="font-size: 18px;"></i>
-              <div>
-                <strong>Aviso Importante (1º Aviso):</strong> Sua conta recebeu uma advertência por descumprimento de regras leves do campeonato.
-              </div>
-            </div>
-          `;
-        } else if (pStatus === 'warning2') {
-          hasNotificationBadge = true;
-          statusBadgeHTML = '<span class="badge badge-warning2">🟠 2º AVISO DE INFRAÇÃO</span>';
-          warningBoxHTML = `
-            <div class="alert-card warning2">
-              <i class="fa-solid fa-radiation" style="font-size: 18px;"></i>
-              <div>
-                <strong>Aviso Crítico (2º Aviso):</strong> Sua conta possui 2 advertências ativas! Uma nova infração resultará no BANIMENTO PERMANENTE.
-              </div>
-            </div>
-          `;
-        }
-
-        const myMessages = state.messages.filter(m =>
-          m.recipientId === 'all' || String(m.recipientId) === String(state.currentPlayer.id)
-        );
-
-        const unreadCount = myMessages.filter(m => !m.readBy || !m.readBy.includes(state.currentPlayer.id)).length;
-        if (unreadCount > 0) hasNotificationBadge = true;
-
-        let messagesListHTML = '';
-        if (myMessages.length === 0) {
-          messagesListHTML = `<div style="font-size: 11px; color: var(--text-muted); text-align: center; padding: 10px;">Nenhuma mensagem ou aviso recebido.</div>`;
-        } else {
-          messagesListHTML = myMessages.map(m => {
-            const isRead = m.readBy && m.readBy.includes(state.currentPlayer.id);
-            const badgeType = m.recipientId === 'all' ? '<span class="badge badge-pending">📢 GERAL</span>' : '<span class="badge badge-paid">📩 DIRETO</span>';
-            return `
-              <div class="card" style="margin-bottom: 8px; padding: 10px; border-left: 3px solid ${isRead ? 'var(--border-color)' : 'var(--neon-gold)'};">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                  <div>${badgeType} <span style="font-size: 10px; color: var(--text-muted); margin-left: 6px;">${escapeHTML(m.date)}</span></div>
-                  ${!isRead ? `<button class="btn-copy" style="font-size: 9px; padding: 3px 6px;" onclick="markMessageAsRead('${m.id}')">Marcar Lida</button>` : '<span style="font-size: 10px; color: var(--neon-green);">✓ Lida</span>'}
-                </div>
-                <div style="font-size: 12px; color: #fff; line-height: 1.4;">${escapeHTML(m.text)}</div>
-              </div>
-            `;
-          }).join('');
-        }
-
-        profileContent.innerHTML = `
-          <div class="card" style="text-align: center;">
-            <div style="width: 60px; height: 60px; font-size: 20px; margin: 0 auto 10px auto; border-radius: 50%; background: #1c2432; display: flex; align-items: center; justify-content: center; border: 1px solid var(--neon-gold);">
-              <i class="fa-solid fa-user" style="color: var(--neon-gold);"></i>
-            </div>
-            <h3 style="font-family: var(--font-heading); font-size: 16px;">${escapeHTML(state.currentPlayer.nick)}</h3>
-            <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 10px;">ID Free Fire: ${escapeHTML(state.currentPlayer.gameId)}</p>
-            <div style="margin-bottom: 14px;">${statusBadgeHTML}</div>
-
-            ${warningBoxHTML}
-
-            <button class="btn-primary" onclick="openModal('modal-support')">
-              <i class="fa-solid fa-headset"></i> SUPORTE E FAQ
-            </button>
-          </div>
-
-          <div class="section-header">
-            <div class="section-title"><i class="fa-solid fa-bell"></i> SEUS AVISOS E COMUNICADOS</div>
-          </div>
-          ${messagesListHTML}
-        `;
-      } else {
-        profileContent.innerHTML = `
-          <div class="empty-state">
-            <i class="fa-solid fa-user-lock"></i>
-            <p>Entre com seu ID do Free Fire pra ver seu perfil.</p>
-          </div>
-        `;
-      }
-
-      // BADGE NO BOTTOM NAV
-      const navBadge = document.getElementById('nav-profile-badge');
-      if (hasNotificationBadge) {
-        navBadge.classList.remove('hidden');
-      } else {
-        navBadge.classList.add('hidden');
-      }
-
-      // PAINEL ADM - MÉTRICAS
-      const allMatchGroups = getGroupedMatches();
-      const totalEarnings = state.players.reduce((acc, p) => acc + parseFloat(p.earnings || 0), 0);
-      document.getElementById('admin-count-players').innerText = state.players.length;
-      document.getElementById('admin-count-matches').innerText = allMatchGroups.length;
-      document.getElementById('admin-total-payout').innerText = `R$ ${totalEarnings.toFixed(2)}`;
-      document.getElementById('admin-count-coupons').innerText = state.coupons.length;
-
-      renderAdminPlayersTable();
-
-      // CUPONS NO ADM
-      const adminCouponsContainer = document.getElementById('admin-coupons-table-body');
-      if (adminCouponsContainer) {
-        if (state.coupons.length === 0) {
-          adminCouponsContainer.innerHTML = `<div class="empty-state"><i class="fa-solid fa-ticket"></i><p>Nenhum cupom cadastrado.</p></div>`;
-        } else {
-          adminCouponsContainer.innerHTML = state.coupons.map(c => `
-            <div class="coupon-card">
-              <div>
-                <div class="coupon-code">${escapeHTML(c.code)}</div>
-                <div style="font-size: 12px; font-weight: 700; color: var(--neon-green);">${escapeHTML(c.discount)}</div>
-                <div style="font-size: 10px; color: var(--text-muted); margin-top: 2px;">Validade: ${escapeHTML(c.valid)}</div>
-              </div>
-              <button class="btn-copy" style="background: rgba(231,76,60,0.2); color: var(--neon-red);" onclick="deleteCoupon('${c.id}')">
-                <i class="fa-solid fa-trash"></i> EXCLUIR
-              </button>
-            </div>
-          `).join('');
-        }
-      }
-
-      // SELECT DE DESTINATÁRIOS
-      const recipientSelect = document.getElementById('msg-recipient');
-      if (recipientSelect) {
-        recipientSelect.innerHTML = `<option value="all">📢 Todos os Jogadores (Global)</option>` +
-          state.players.map(p => `<option value="${p.id}">👤 ${escapeHTML(p.nick)} (ID: ${escapeHTML(p.gameId)})</option>`).join('');
-      }
-
-      // HISTÓRICO DE MENSAGENS NO ADM
-      const msgHistory = document.getElementById('admin-messages-history');
-      if (msgHistory) {
-        if (state.messages.length === 0) {
-          msgHistory.innerHTML = `<div style="font-size: 11px; color: var(--text-muted);">Nenhuma mensagem enviada.</div>`;
-        } else {
-          msgHistory.innerHTML = state.messages.map(m => {
-            let targetLabel = '📢 Todos os Jogadores';
-            if (m.recipientId !== 'all') {
-              const targetPlayer = state.players.find(p => String(p.id) === String(m.recipientId));
-              targetLabel = targetPlayer ? `👤 ${escapeHTML(targetPlayer.nick)} (ID: ${escapeHTML(targetPlayer.gameId)})` : '👤 Jogador Removido';
-            }
-            return `
-              <div style="background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); padding: 8px; border-radius: 6px; margin-bottom: 6px; font-size: 11px;">
-                <div style="display: flex; justify-content: space-between; color: var(--neon-gold); font-weight: 700;">
-                  <span>Para: ${targetLabel}</span>
-                  <button class="btn-copy" style="background: rgba(231,76,60,0.2); color: var(--neon-red); font-size: 9px; padding: 2px 6px;" onclick="deleteMessage('${m.id}')">Excluir</button>
-                </div>
-                <div style="color: #fff; margin: 4px 0;">${escapeHTML(m.text)}</div>
-                <div style="font-size: 9px; color: var(--text-muted);">${escapeHTML(m.date)}</div>
-              </div>
-            `;
-          }).join('');
-        }
-      }
-
-      // PARTIDAS ADM (COM BOTÃO DE EXCLUIR)
-      const adminMatchesList = document.getElementById('admin-matches-list');
-      if (state.matches.length === 0) {
-        adminMatchesList.innerHTML = `<div class="empty-state"><i class="fa-solid fa-gamepad"></i><p>Nenhuma partida criada.</p></div>`;
-      } else {
-        adminMatchesList.innerHTML = allMatchGroups.map((g, idx) => renderMatchGroupHTML(g, 'admin-' + idx, true)).join('');
-      }
-    }
-
-    window.addEventListener('DOMContentLoaded', async () => {
-      updateConnectionBadge();
-
-      // Se já existir uma sessão de ADM ativa (Supabase Auth), reconecta sozinho
-      if (_supabase) {
-        const { data: { session } } = await _supabase.auth.getSession();
-        if (session) {
-          const { data: adminCheck } = await _supabase
-            .from('admin_users')
-            .select('role')
-            .eq('user_id', session.user.id)
-            .maybeSingle();
-          if (adminCheck) state.isAdminAuthenticated = true;
-        }
-
-        // Se existir um token de sessão do jogador salvo, tenta reconectar.
-        // Se o token não existir mais ou tiver expirado (30 dias sem uso),
-        // limpa e volta pra tela de login normalmente.
-        const savedToken = localStorage.getItem(PLAYER_SESSION_KEY);
-        if (savedToken) {
-          const { data: sessionData } = await _supabase.rpc('player_session_login', { p_token: savedToken });
-          const sessionResult = sessionData && sessionData[0];
-          if (sessionResult && !sessionResult.error) {
-            state.currentPlayer = {
-              id: sessionResult.id,
-              nick: sessionResult.nick,
-              gameId: sessionResult.gameId,
-              status: sessionResult.status,
-              kills: sessionResult.kills,
-              matchesCount: sessionResult.matchesCount,
-              earnings: sessionResult.earnings
-            };
-          } else {
-            localStorage.removeItem(PLAYER_SESSION_KEY);
-          }
-        }
-      }
-
-      await fetchFromDatabase();
-
-      const filterInput = document.getElementById('filter-match-id');
-      if (filterInput) {
-        filterInput.addEventListener('input', () => {
-          clearTimeout(filterDebounceTimer);
-          filterDebounceTimer = setTimeout(() => {
-            currentMatchPage = 1;
-            renderMatchesOnly();
-          }, 300);
-        });
-      }
-
-      const playerSearchInput = document.getElementById('admin-player-search');
-      if (playerSearchInput) {
-        let playerSearchDebounceTimer = null;
-        playerSearchInput.addEventListener('input', () => {
-          clearTimeout(playerSearchDebounceTimer);
-          playerSearchDebounceTimer = setTimeout(renderAdminPlayersTable, 300);
-        });
-      }
-    });
-  </script>
+  <script src="public-config.js" defer></script>
+  <script src="assets/supabase.js" defer></script>
+  <script src="app.js" defer></script>
 </body>
 </html>
