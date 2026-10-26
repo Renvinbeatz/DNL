@@ -298,7 +298,8 @@
           <label for="player-login-id">ID DO FREE FIRE</label>
           <input type="text" inputmode="numeric" autocomplete="off" maxlength="20" pattern="[0-9]{3,20}" id="player-login-id" class="form-control" placeholder="Digite seu ID FF" required>
         </div>
-        <button type="submit" class="btn-primary">ENTRAR</button>
+        <button type="submit" class="btn-primary" data-login-label="ENTRAR" aria-describedby="player-login-wait">ENTRAR</button>
+        <p id="player-login-wait" data-login-wait role="status" class="login-wait hidden"></p>
       </form>
     </div>
   </div>
@@ -309,7 +310,7 @@
         <h3 class="modal-title" style="color: var(--neon-gold); font-size: 14px;"><i class="fa-solid fa-shield-halved"></i> AUTENTICAÇÃO ADM</h3>
         <button aria-label="Fechar janela" class="btn-icon" data-click="closeModal" data-arg="modal-admin-auth"><i class="fa-solid fa-xmark"></i></button>
       </div>
-      <form data-submit="handleAdminAuth">
+      <form id="form-admin-login" data-submit="handleAdminAuth">
         <div class="form-group">
           <label for="admin-user-input">E-MAIL</label>
           <input type="email" maxlength="254" id="admin-user-input" class="form-control" placeholder="Login de administrador" required autocomplete="username">
@@ -318,7 +319,8 @@
           <label for="admin-pass-input">SENHA</label>
           <input type="password" autocomplete="current-password" maxlength="1024" id="admin-pass-input" class="form-control" placeholder="Senha de administrador" required>
         </div>
-        <button type="submit" class="btn-primary">ENTRAR NO PAINEL</button>
+        <button type="submit" class="btn-primary" data-login-label="ENTRAR NO PAINEL" aria-describedby="admin-login-wait">ENTRAR NO PAINEL</button>
+        <p id="admin-login-wait" data-login-wait role="status" class="login-wait hidden"></p>
       </form>
     </div>
   </div>

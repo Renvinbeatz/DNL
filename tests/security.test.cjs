@@ -5,14 +5,14 @@ const vm=require('node:vm');
 const {JSDOM}=require('jsdom');
 const html=fs.readFileSync('index.html','utf8');
 const script=fs.readFileSync('app.js','utf8');
-function app(overrides={}){
+function app(overrides={},setup=()=>{}){
   const dom=new JSDOM(html,{url:'https://novaleague.vercel.app/',runScripts:'outside-only'});
   const w=dom.window;
   const addEvent=w.addEventListener.bind(w);w.addEventListener=(type,fn,...args)=>{if(type!=='DOMContentLoaded')addEvent(type,fn,...args)};
   w.setInterval=()=>0;w.setTimeout=()=>0;w.clearTimeout=()=>{};
   w.NOVA_CONFIG={supabaseUrl:'https://aqvyehkrbjttvdirtjzd.supabase.co',publishableKey:'sb_publishable_test'};
   const client={rpc:async(name)=>({data:name==='is_admin'?false:[],error:null}),auth:{onAuthStateChange(){},mfa:{},signOut:async()=>({error:null})},...overrides};
-  w.supabase={createClient:()=>client};const context=dom.getInternalVMContext();vm.runInContext(script,context);
+  w.supabase={createClient:()=>client};setup(w);const context=dom.getInternalVMContext();vm.runInContext(script,context);
   return {w,dom,client,run:s=>vm.runInContext(s,context)};
 }
 test('No executable inline scripts or inline events; restrictive CSP',()=>{
@@ -96,6 +96,56 @@ test('Password login still rejects a non-admin and a rejected server authorizati
   if(member) await assert.rejects(a.run('handleAdminAuth()'));else await a.run('handleAdminAuth()');
   assert.equal(signedOut,true);assert.equal(a.run('state.isAdminAuthenticated'),false);a.dom.window.close();
  }
+});
+
+test('Rejected ID starts a shared 15-second wait; typing another ID cannot bypass or extend it',async()=>{
+ let now=100000,calls=0;
+ const a=app({rpc:async()=>{calls++;return {data:[{error:'ID inválido'}],error:null}}},w=>{w.Date.now=()=>now});
+ a.run(`document.getElementById('player-login-id').value='99999999'`);
+ const form=a.w.document.getElementById('form-player-login');const event={target:form,preventDefault(){},stopPropagation(){}};
+ await a.w.dispatchAction(event,'submit');
+ for(const id of ['form-player-login','form-admin-login']) {const button=a.w.document.querySelector('#'+id+' button[type=submit]');assert.equal(button.disabled,true);assert.match(button.textContent,/15s/);}
+ assert.equal(Number(a.w.localStorage.getItem('nova_login_retry_until_v1')),115000);
+ a.run(`document.getElementById('player-login-id').value='88888888'`);
+ now=114999;await a.run('handlePlayerLogin()');await a.run('handleAdminAuth()');assert.equal(calls,1);assert.equal(Number(a.w.localStorage.getItem('nova_login_retry_until_v1')),115000);
+ assert.match(form.querySelector('button').textContent,/1s/);
+ now=115000;a.run('renderLoginRetryControls()');assert.equal(form.querySelector('button').disabled,false);assert.equal(form.querySelector('button').textContent,'ENTRAR');
+ await a.run('handlePlayerLogin()');assert.equal(calls,2);assert.equal(Number(a.w.localStorage.getItem('nova_login_retry_until_v1')),130000);a.dom.window.close();
+});
+
+test('Wrong administrative password blocks new authentication requests for exactly 15 seconds',async()=>{
+ let now=100000,calls=0;
+ const a=app({auth:{signInWithPassword:async()=>{calls++;return {data:{user:null},error:{code:'invalid_credentials',status:400}}}}},w=>{w.Date.now=()=>now});
+ a.run(`document.getElementById('admin-user-input').value='admin@example.test';document.getElementById('admin-pass-input').value='wrong-password'`);
+ await a.run('handleAdminAuth()');assert.equal(calls,1);assert.equal(a.w.document.querySelector('#form-admin-login button').disabled,true);
+ now=114000;a.run(`document.getElementById('admin-pass-input').value='another-password'`);await a.run('handleAdminAuth()');assert.equal(calls,1);
+ now=115000;await a.run('handleAdminAuth()');assert.equal(calls,2);a.dom.window.close();
+});
+
+test('Wait survives reload and storage events synchronize the countdown with other tabs',()=>{
+ let now=105000;const a=app({},w=>{w.Date.now=()=>now;w.localStorage.setItem('nova_login_retry_until_v1','115000')});
+ const button=a.w.document.querySelector('#form-player-login button');assert.equal(button.disabled,true);assert.match(button.textContent,/10s/);
+ a.run(`openModal('modal-player-auth');closeModal('modal-player-auth');openModal('modal-admin-auth')`);assert.match(button.textContent,/10s/);
+ now=115000;a.run('renderLoginRetryControls()');assert.equal(button.disabled,false);
+ a.w.localStorage.setItem('nova_login_retry_until_v1','130000');a.w.dispatchEvent(new a.w.StorageEvent('storage',{key:'nova_login_retry_until_v1',newValue:'130000'}));assert.match(button.textContent,/15s/);assert.equal(button.disabled,true);a.dom.window.close();
+});
+
+test('Native form validation starts the wait before submitting an invalid login',()=>{
+ const a=app();const input=a.w.document.getElementById('player-login-id');input.value='abc';
+ input.dispatchEvent(new a.w.Event('invalid',{cancelable:true}));assert.equal(a.w.document.querySelector('#form-player-login button').disabled,true);assert.equal(a.w.document.querySelector('#form-admin-login button').disabled,true);a.dom.window.close();
+});
+
+test('Invalid ID or administrative credential format starts the wait without calling the backend',async()=>{
+ for(const action of ['handlePlayerLogin','handleAdminAuth']){
+  let calls=0;const a=app({rpc:async()=>{calls++;throw Error('Unexpected request')},auth:{signInWithPassword:async()=>{calls++;throw Error('Unexpected request')}}});
+  a.run(`document.getElementById('player-login-id').value='abc';document.getElementById('admin-user-input').value='invalid';document.getElementById('admin-pass-input').value='short'`);
+  await a.run(action+'()');assert.equal(calls,0);assert.equal(a.w.document.querySelector('#form-admin-login button').disabled,true);a.dom.window.close();
+ }
+});
+
+test('Network failures do not count as incorrect credentials',async()=>{
+ const player=app({rpc:async()=>({data:null,error:{message:'Network failed'}})});player.run(`document.getElementById('player-login-id').value='99999999'`);await assert.rejects(player.run('handlePlayerLogin()'));assert.equal(player.run('loginRetrySeconds()'),0);player.dom.window.close();
+ const admin=app({auth:{signInWithPassword:async()=>({data:null,error:{name:'AuthRetryableFetchError',status:503}})}});admin.run(`document.getElementById('admin-user-input').value='admin@example.test';document.getElementById('admin-pass-input').value='test-password'`);await admin.run('handleAdminAuth()');assert.equal(admin.run('loginRetrySeconds()'),0);admin.dom.window.close();
 });
 test('Vercel headers prevent framing, sniffing, referrer leakage and mixed content',()=>{
  const config=JSON.parse(fs.readFileSync('vercel.json','utf8'));const headers=Object.fromEntries(config.headers[0].headers.map(h=>[h.key,h.value]));

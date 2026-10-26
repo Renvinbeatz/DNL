@@ -387,6 +387,8 @@
     }
   
 :focus-visible { outline: 2px solid var(--neon-gold); outline-offset: 3px; }
+.login-wait { margin-top: 10px; color: var(--neon-gold); font-size: 12px; line-height: 1.4; }
+button[data-login-label]:disabled { cursor: not-allowed; opacity: .65; }
 [aria-busy="true"] { opacity: .65; }
 .modal-overlay:not(.active) { visibility: hidden; }
 .bottom-nav { padding-bottom: env(safe-area-inset-bottom); height: calc(60px + env(safe-area-inset-bottom)); }

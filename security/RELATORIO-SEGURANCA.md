@@ -1,5 +1,11 @@
 # Relatório de segurança — Diário da NØVA
 
+## Atualização de 26/10/2026 — espera após login recusado
+
+Foi adicionado um intervalo de 15 segundos na interface após credenciais inválidas, ID recusado ou conta sem permissão administrativa. A espera vale para os dois formulários no mesmo navegador, mostra contagem regressiva, impede novo envio inclusive por Enter, persiste ao recarregar e é sincronizada entre abas. Tentativas durante a espera não renovam o prazo. Ao terminar, o botão volta ao estado de envio; uma nova tentativa recusada inicia outro intervalo. Campos inválidos detectados pelo navegador também iniciam a espera. Erros de rede não são penalizados como erro de credencial.
+
+São 38 verificações locais aprovadas. Esta mudança afeta `app.js`, `index.html` e `styles.css`, sem alterar regras SQL ou o serviço de Auth. O bloqueio é do frontend, com um horário em `localStorage`; ele complementa os controles existentes e não garante intervalo de 15 segundos para chamadas diretas à API, uso de outro navegador ou manipulação do armazenamento. Nenhum e-mail, senha ou ID é armazenado para controlar a espera. A publicação continua manual.
+
 ## Atualização de 21/10/2026 — acesso administrativo sem segundo fator
 
 Por solicitação do proprietário, foi removida a exigência de duas etapas do painel. O frontend autentica por e-mail e senha e consulta `is_admin` antes de abrir o painel. A nova migração `20261021044448_security_hardening_07.sql` retira o requisito `aal2`, mantendo associação em `admin_users`, conferência da sessão no servidor, revogação e duração máxima de oito horas. Não há mais modal, QR, cadastro ou desafio de autenticador no código da aplicação. Fatores de contas reais não foram removidos.

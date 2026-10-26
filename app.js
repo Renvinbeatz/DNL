@@ -19,6 +19,11 @@
     let connectionState = 'connecting';
     let fetching = null;
     const actionLocks = new Set();
+    const LOGIN_RETRY_KEY = 'nova_login_retry_until_v1';
+    const LOGIN_RETRY_MS = 15000;
+    const loginActions = new Set(['handlePlayerLogin','handleAdminAuth']);
+    let loginRetryUntil = 0;
+    let loginRetryTimer = null;
     const safeId = /^[0-9]{3,20}$/;
     const uuidPattern = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
 
@@ -320,13 +325,54 @@
       try { return await fetching; } finally { fetching = null; }
     }
 
+    function loginRetrySeconds() {
+      try {
+        const saved=Number(localStorage.getItem(LOGIN_RETRY_KEY));
+        if(Number.isFinite(saved) && saved>0) loginRetryUntil=Math.max(loginRetryUntil,saved);
+      } catch { /* The current tab still enforces the wait if storage is unavailable. */ }
+      return Math.max(0,Math.ceil((loginRetryUntil-Date.now())/1000));
+    }
+
+    function renderLoginRetryControls() {
+      const seconds=loginRetrySeconds();
+      document.querySelectorAll('form[data-submit]').forEach(form=>{
+        if(!loginActions.has(form.dataset.submit)) return;
+        const button=form.querySelector('button[type="submit"]');
+        const notice=form.querySelector('[data-login-wait]');
+        button.disabled=seconds>0 || actionLocks.has(form.dataset.submit);
+        button.textContent=seconds>0 ? `TENTAR NOVAMENTE EM ${seconds}s` : button.dataset.loginLabel;
+        const text=seconds>0 ? 'Aguarde a contagem no botão para tentar entrar novamente.' : '';
+        if(notice.textContent!==text) notice.textContent=text;
+        notice.classList.toggle('hidden',seconds===0);
+      });
+      if(seconds>0 && loginRetryTimer===null) loginRetryTimer=setInterval(renderLoginRetryControls,250);
+      else if(seconds===0 && loginRetryTimer!==null) {clearInterval(loginRetryTimer);loginRetryTimer=null;}
+    }
+
+    function startLoginRetryWait() {
+      if(loginRetrySeconds()===0) {
+        loginRetryUntil=Date.now()+LOGIN_RETRY_MS;
+        try {localStorage.setItem(LOGIN_RETRY_KEY,String(loginRetryUntil));} catch { /* Keep the in-memory deadline. */ }
+      }
+      renderLoginRetryControls();
+    }
+
+    function loginRetryBlocked() {
+      const seconds=loginRetrySeconds();
+      renderLoginRetryControls();
+      if(seconds>0) showToast(`Aguarde ${seconds}s para tentar novamente.`,'danger');
+      return seconds>0;
+    }
+
     async function handlePlayerLogin() {
+      if(loginRetryBlocked()) return;
       if (!_supabase) throw new Error('offline');
       const id = document.getElementById('player-login-id').value.trim();
-      if (!safeId.test(id)) throw new Error('Digite um ID válido, com 3 a 20 números.');
+      if (!safeId.test(id)) {startLoginRetryWait();showToast('Digite um ID válido, com 3 a 20 números. Tente novamente em 15s.','danger');return;}
       const result = await checked(_supabase.rpc('player_login', { p_game_id: id }));
       const row = result?.[0];
       if (!row || row.error || !/^[a-f0-9]{64}$/.test(row.session_token || '')) {
+        startLoginRetryWait();
         showToast(row?.error?.startsWith('Aguarde') ? 'Aguarde antes de tentar novamente.' : 'Não foi possível acessar. Confira seu ID ou fale com a organização.', 'danger'); return;
       }
       playerToken = row.session_token; sessionStorage.setItem(PLAYER_SESSION_KEY, playerToken);
@@ -344,18 +390,22 @@
     }
 
     async function handleAdminAuth() {
+      if(loginRetryBlocked()) return;
       if (!_supabase) throw new Error('offline');
       const email=document.getElementById('admin-user-input').value.trim();
       const password=document.getElementById('admin-pass-input').value;
-      if (email.length>254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || password.length<8 || password.length>1024) throw new Error('Credenciais inválidas.');
+      if (email.length>254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || password.length<8 || password.length>1024) {startLoginRetryWait();showToast('Credenciais inválidas. Tente novamente em 15s.','danger');return;}
       const {data,error}=await _supabase.auth.signInWithPassword({email,password});
       document.getElementById('admin-pass-input').value='';
-      if (error || !data.user) { showToast('Não foi possível autenticar. Confira as credenciais ou aguarde.', 'danger'); return; }
+      if (error || !data?.user) {
+        if(!error || (error.name!=='AuthRetryableFetchError' && error.name!=='TypeError' && !(error.status>=500))) startLoginRetryWait();
+        showToast('Não foi possível autenticar. Confira as credenciais ou aguarde.', 'danger'); return;
+      }
       const membership=await _supabase.from('admin_users').select('role').eq('user_id',data.user.id).maybeSingle();
-      if (membership.error || !membership.data) { await _supabase.auth.signOut(); showToast('Não foi possível autenticar o administrador.', 'danger'); return; }
+      if (membership.error || !membership.data) { if(!membership.error) startLoginRetryWait(); await _supabase.auth.signOut(); showToast('Não foi possível autenticar o administrador.', 'danger'); return; }
       try {
         const allowed=await checked(_supabase.rpc('is_admin'));
-        if(allowed!==true) throw new Error('Acesso não autorizado.');
+        if(allowed!==true) {startLoginRetryWait();throw new Error('Acesso não autorizado.');}
         if(fetching) await fetching;
         await fetchFromDatabase();
         if(!state.isAdminAuthenticated || connectionState!=='online') throw new Error('Serviço indisponível.');
@@ -1393,19 +1443,28 @@
       if(!Object.hasOwn(actions,name)) return;
       event.preventDefault(); event.stopPropagation();
       if(adminActions.has(name) && !state.isAdminAuthenticated) { showToast('Entre no painel administrativo.','danger'); return; }
+      if(loginActions.has(name) && loginRetryBlocked()) return;
       if(actionLocks.has(name)) return;
       const controls=el.matches('form') ? [...el.querySelectorAll('button,input,textarea,select')] : [el];
       const previous=controls.map(c=>c.disabled); actionLocks.add(name);
       controls.forEach(c=>{c.disabled=true;}); el.setAttribute('aria-busy','true');
       try { await actions[name](el); }
       catch { showToast('Não foi possível concluir. Verifique os dados, sua conexão e tente novamente.','danger'); }
-      finally { actionLocks.delete(name); controls.forEach((c,i)=>{c.disabled=previous[i];}); el.removeAttribute('aria-busy'); }
+      finally { actionLocks.delete(name); controls.forEach((c,i)=>{c.disabled=previous[i];}); el.removeAttribute('aria-busy'); renderLoginRetryControls(); }
     }
 
     let lastInteraction=Date.now();
     document.addEventListener('click',event=>{lastInteraction=Date.now(); void dispatchAction(event,'click');});
     document.addEventListener('submit',event=>{lastInteraction=Date.now(); void dispatchAction(event,'submit');});
     document.addEventListener('change',event=>{lastInteraction=Date.now(); void dispatchAction(event,'change');});
+    document.addEventListener('invalid',event=>{
+      const form=event.target.closest('form');
+      if(form && loginActions.has(form.dataset.submit)) startLoginRetryWait();
+    },true);
+    window.addEventListener('storage',event=>{if(event.key===LOGIN_RETRY_KEY || event.key===null) renderLoginRetryControls();});
+    window.addEventListener('pageshow',renderLoginRetryControls);
+    document.addEventListener('visibilitychange',renderLoginRetryControls);
+    renderLoginRetryControls();
     document.addEventListener('keydown',event=>{
       lastInteraction=Date.now();
       const modal=document.querySelector('.modal-overlay.active');

@@ -69,6 +69,10 @@ Há uma duplicata histórica identificada na auditoria. A migração não a apag
 
 ## Limites e manutenção
 
+Desde 26/10/2026, uma tentativa recusada de login administrativo ou de jogador inicia uma espera de 15 segundos na interface. Os dois formulários mostram a contagem no botão e recusam novos envios até o prazo terminar. O prazo é compartilhado no mesmo navegador, persiste ao recarregar e sincroniza entre abas; trocar o e-mail, a senha ou o ID não reinicia nem contorna a espera. Os campos continuam editáveis para corrigir os dados enquanto o botão está bloqueado. Falhas de conexão não são tratadas como credenciais erradas.
+
+Esse intervalo é aplicado no frontend e armazena somente o horário de liberação em `localStorage`, sem credenciais. Ele não substitui os limites do Supabase/banco e pode ser contornado por clientes que chamem as APIs diretamente, outro navegador ou alteração do armazenamento local. Limites já existentes no serviço podem impor espera maior. Para publicar esta mudança, atualizar `app.js`, `index.html` e `styles.css`; não há nova migração SQL.
+
 Tokens de jogadores ficam nesta aba, expiram em sete dias com renovação limitada a trinta dias e são guardados no banco como hash. Fechar a aba normalmente exige informar o ID outra vez. O painel administrativo encerra no cliente após quinze minutos sem interação e o banco impõe duração máxima de oito horas à sessão de Auth.
 
 A consulta de comunicados do jogador retorna até 500 mensagens recentes; a atualização do frontend limita cada histórico paginado a 20.000 registros. Ranking, estatísticas, prêmios e medalhas são públicos; IDs ficam parcialmente ocultados nas projeções. A ocultação não torna nick e resultados anônimos.
