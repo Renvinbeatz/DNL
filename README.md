@@ -1,10 +1,18 @@
 # Diário da NØVA
 
-Site estático com Supabase para cadastros, resultados, cupons e comunicados. Jogadores acessam pelo ID do Free Fire. Administradores usam Supabase Auth com associação em `admin_users` e segundo fator TOTP obrigatório no banco.
+Site estático com Supabase para cadastros, resultados, cupons e comunicados. Jogadores acessam pelo ID do Free Fire. Administradores usam e-mail e senha do Supabase Auth, com associação em `admin_users` e sessão válida conferidas no banco. Não há etapa de autenticador no painel.
 
 ## Estado da segurança
 
-As correções desta entrega estão no código e nas migrações, **ainda não implantadas**. Supabase recusou escritas persistentes com `Invalid or expired requestState`; Vercel recusou acesso à equipe do projeto com `403`. O relatório completo está em `security/RELATORIO-SEGURANCA.md`.
+A alteração de 21/10/2026 que remove a exigência de duas etapas está preparada localmente para implantação manual, conforme solicitado. Nenhuma escrita remota ou publicação foi realizada nesta alteração. A última conferência das conexões, em 10/10, encontrou erros no Supabase e na Vercel; a situação da produção não foi revalidada após eventuais aplicações manuais. O relatório está em `security/RELATORIO-SEGURANCA.md`.
+
+## Atualizar um site que já recebeu as seis migrações anteriores
+
+Executar **somente** `security/remove-admin-mfa.sql` no SQL Editor do projeto correto e publicar o novo frontend, com `app.js` e `index.html` atualizados. Esse arquivo contém a migração `20261021044448_security_hardening_07.sql`: retira a exigência de `aal2`, preservando associação administrativa, revogação e validade máxima da sessão. É possível executar a atualização incremental novamente sem duplicar dados.
+
+Não reaplicar o pacote completo em um banco que já recebeu as seis migrações. Se o pacote anterior ainda não foi aplicado, usar a instalação completa abaixo: `security/apply-security.sql` já inclui todas as sete migrações e termina com acesso administrativo sem segundo fator. Os dois pacotes são gerados por `npm run package:security`.
+
+A alteração não apaga fatores já cadastrados na conta Supabase: o painel deixa de solicitá-los e de exigir o segundo fator nas permissões do banco. A validação de e-mail/senha continua obrigatória.
 
 O acesso por ID não comprova identidade. Quem conhece um ID cadastrado pode ler as informações e comunicados desse cadastro. Essa característica foi mantida por solicitação do proprietário. Não enviar informações confidenciais por esse fluxo.
 
@@ -30,11 +38,11 @@ O site local fica em `http://127.0.0.1:4173`. O servidor só entrega os sete arq
 1. Confirmar o projeto Supabase `aqvyehkrbjttvdirtjzd` e criar/conferir backup recuperável antes da migração. Essas migrações dependem do esquema auditado e não são um instalador para banco vazio.
 2. Fazer a aplicação em janela de manutenção. O frontend antigo usa permissões/assinaturas que serão removidas; publicar somente um dos lados interrompe fluxos. A migração invalida tokens antigos, exigindo novo acesso dos jogadores por ID.
 3. Gerar `security/apply-security.sql` com `npm run package:security`. Abrir o SQL Editor do projeto correto com uma conta autorizada e executar o arquivo completo uma única vez. Ele contém `BEGIN`/`COMMIT`; em caso de erro, a transação não deve ser tratada como aplicação parcial bem-sucedida. Não reaplicar o pacote após sucesso.
-4. Alternativamente, usar Supabase CLI autenticada e aplicar as seis migrações em ordem. Escolher esse caminho **ou** o pacote manual: não executar os dois. O SQL Editor não registra automaticamente as seis versões no histórico do CLI; antes de adotar CLI depois de uma aplicação manual, reconciliar esse histórico. Nunca marcar migrações como aplicadas sem verificar seu efeito.
+4. Alternativamente, usar Supabase CLI autenticada e aplicar as sete migrações em ordem. Escolher esse caminho **ou** o pacote manual: não executar os dois. O SQL Editor não registra automaticamente as versões no histórico do CLI; antes de adotar CLI depois de uma aplicação manual, reconciliar esse histórico. Nunca marcar migrações como aplicadas sem verificar seu efeito.
 5. No Supabase, conferir que `nova_private` não está entre os esquemas expostos pela Data API. Não adicionar concessões públicas ou políticas `USING (true)` a mensagens, sessões ou jogadores para contornar erros de login.
-6. Confirmar a conta administrativa existente em Supabase Auth e sua linha em `public.admin_users`. Não criar associação administrativa com base em metadados editáveis pelo usuário. Configurar proteção de senhas, limites de Auth, recuperação de MFA e cadastro público de contas conforme a operação da organização.
+6. Confirmar a conta administrativa existente em Supabase Auth e sua linha em `public.admin_users`. Não criar associação administrativa com base em metadados editáveis pelo usuário. Configurar proteção de senhas, limites de Auth, recuperação de conta e cadastro público de contas conforme a operação da organização.
 7. Na Vercel, usar o projeto `novaleague` da equipe autorizada. Publicar este repositório com `npm run build` e saída `dist`; `vercel.json` contém essas definições e os cabeçalhos. Não publicar a raiz como pasta estática. Instalação com `npm ci --ignore-scripts` é compatível com o build, evitando scripts de instalação desnecessários.
-8. Validar primeiro a nova publicação e então o domínio `https://novaleague.vercel.app/`. No primeiro acesso do administrador, cadastrar um autenticador e confirmar o código TOTP. O painel não deve liberar acesso apenas com a senha. O acesso administrativo pode ser aberto com Ctrl+Shift+A ou cinco cliques na marca.
+8. Validar primeiro a nova publicação e então o domínio `https://novaleague.vercel.app/`. Entrar com e-mail e senha de uma conta administrativa: o painel deve abrir diretamente, sem QR ou código do autenticador. Uma conta autenticada sem associação administrativa deve ser recusada. O acesso administrativo pode ser aberto com Ctrl+Shift+A ou cinco cliques na marca.
 
 O endereço Supabase também está na CSP de `index.html` e `vercel.json`. Ao trocar de projeto, alterar os três arquivos de configuração e revisar o esquema e as migrações para o destino. Chaves de outro projeto não transferem os dados, permissões ou contas de Auth.
 
@@ -55,7 +63,7 @@ WHERE conname IN ('player_input_valid','match_input_valid','coupon_input_valid',
 
 Esperado: esquema privado existe; nenhuma função pública `SECURITY DEFINER`; assinatura antiga de IDOR inexistente; quatro constraints validadas. As implementações privilegiadas ficam no esquema privado, com verificação própria e permissões explícitas.
 
-Verificar também, pela aplicação, acesso por ID, mensagens de dois cadastros diferentes, marcação de leitura, ranking, criação/edição/exclusão de uma partida de teste e login administrativo com MFA. Conferir no domínio os cabeçalhos CSP, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff` e `Referrer-Policy: no-referrer`. Rodar os advisors novamente. Um `403` de tabela protegida para visitante é esperado; não remover RLS para corrigir isso.
+Verificar também, pela aplicação, acesso por ID, mensagens de dois cadastros diferentes, marcação de leitura, ranking, criação/edição/exclusão de uma partida de teste e login administrativo por e-mail/senha. Conferir no domínio os cabeçalhos CSP, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff` e `Referrer-Policy: no-referrer`. Rodar os advisors novamente. Um `403` de tabela protegida para visitante é esperado; não remover RLS para corrigir isso.
 
 Há uma duplicata histórica identificada na auditoria. A migração não a apaga. Sua revisão exige confirmar o resultado correto antes de alterar totais reais.
 

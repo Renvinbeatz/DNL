@@ -76,9 +76,26 @@ test('Personal dashboard refreshes from the token endpoint and no direct message
  a.run(`playerToken='${'a'.repeat(64)}';state.currentPlayer={kills:1}`);await a.run('fetchFromDatabase()');
  assert.equal(a.w.document.getElementById('dash-kills').innerText,9);assert.ok(calls.includes('get_my_messages'));assert.equal(a.w.document.getElementById('conn-status-badge').textContent,'ONLINE');a.dom.window.close();
 });
-test('MFA verification is required before granting administrative UI access',async()=>{
- const a=app({auth:{onAuthStateChange(){},mfa:{challengeAndVerify:async()=>({error:{message:'invalid'}})}}});
- a.run(`mfaFactorId='f';document.getElementById('mfa-code').value='123456'`);await a.run('handleAdminMfa()');assert.equal(a.run('state.isAdminAuthenticated'),false);a.dom.window.close();
+test('Administrator signs in with password and server authorization without a second step',async()=>{
+ const a=app({
+  auth:{signInWithPassword:async()=>({data:{user:{id:'admin'}},error:null})},
+  rpc:async(name)=>({data:name==='is_admin'?true:[],error:null}),
+  from(){return {select(){return {
+   eq(){return {maybeSingle:async()=>({data:{role:'admin'},error:null})}},
+   order(){return this},range:async()=>({data:[],error:null})
+  }}}}
+ });
+ a.run(`document.getElementById('admin-user-input').value='admin@example.test';document.getElementById('admin-pass-input').value='test-password';openModal('modal-admin-auth')`);
+ await a.run('handleAdminAuth()');assert.equal(a.run('state.isAdminAuthenticated'),true);assert.equal(a.w.document.querySelector('#view-admin').classList.contains('hidden'),false);assert.equal(a.w.document.querySelector('#modal-admin-mfa'),null);assert.equal(a.w.document.getElementById('admin-pass-input').value,'');a.dom.window.close();
+});
+
+test('Password login still rejects a non-admin and a rejected server authorization',async()=>{
+ for(const member of [null,{role:'admin'}]){
+  let signedOut=false;const a=app({auth:{signInWithPassword:async()=>({data:{user:{id:'user'}},error:null}),signOut:async()=>{signedOut=true;return {error:null}}},from:()=>({select:()=>({eq:()=>({maybeSingle:async()=>({data:member,error:null})})})})});
+  a.run(`document.getElementById('admin-user-input').value='user@example.test';document.getElementById('admin-pass-input').value='test-password'`);
+  if(member) await assert.rejects(a.run('handleAdminAuth()'));else await a.run('handleAdminAuth()');
+  assert.equal(signedOut,true);assert.equal(a.run('state.isAdminAuthenticated'),false);a.dom.window.close();
+ }
 });
 test('Vercel headers prevent framing, sniffing, referrer leakage and mixed content',()=>{
  const config=JSON.parse(fs.readFileSync('vercel.json','utf8'));const headers=Object.fromEntries(config.headers[0].headers.map(h=>[h.key,h.value]));

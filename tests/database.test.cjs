@@ -43,12 +43,12 @@ test('PostgreSQL migration and authorization regression suite',async t=>{
    await asAnon();await db.query(`SELECT * FROM public.player_login($1)`,['123456789999']);await asOwner();
    const unknown=await db.query(`SELECT count(*)::int AS n FROM nova_private.rate_limits WHERE subject=encode(extensions.digest('123456789999','sha256'),'hex') OR scope='old'`);assert.equal(unknown.rows[0].n,0);
   });
-  await t.test('Administrative membership without MFA cannot write',async()=>{
-   await db.exec(`INSERT INTO auth.users VALUES('dddddddd-dddd-4ddd-8ddd-dddddddddddd'); INSERT INTO public.admin_users(user_id) VALUES('dddddddd-dddd-4ddd-8ddd-dddddddddddd');INSERT INTO auth.sessions(id,user_id) VALUES('eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee','dddddddd-dddd-4ddd-8ddd-dddddddddddd');SET ROLE authenticated;SET request.jwt.claims='{"role":"authenticated","sub":"dddddddd-dddd-4ddd-8ddd-dddddddddddd","session_id":"eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee","aal":"aal1"}';`);
+  await t.test('Authenticated account without administrative membership cannot write',async()=>{
+   await db.exec(`INSERT INTO auth.users VALUES('dddddddd-dddd-4ddd-8ddd-dddddddddddd');INSERT INTO auth.sessions(id,user_id) VALUES('eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee','dddddddd-dddd-4ddd-8ddd-dddddddddddd');SET ROLE authenticated;SET request.jwt.claims='{"role":"authenticated","sub":"dddddddd-dddd-4ddd-8ddd-dddddddddddd","session_id":"eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee","aal":"aal1"}';`);
    const r=await db.query('SELECT public.is_admin() AS ok');assert.equal(r.rows[0].ok,false);await assert.rejects(db.query(`INSERT INTO public.cupons(code,discount) VALUES('QA','Test')`));await asOwner();
   });
-  await t.test('MFA admin can write; validation rejects invalid and duplicate results atomically',async()=>{
-   await db.exec(`SET ROLE authenticated;SET request.jwt.claims='{"role":"authenticated","sub":"dddddddd-dddd-4ddd-8ddd-dddddddddddd","session_id":"eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee","aal":"aal2"}';`);
+  await t.test('Authorized admin without MFA can write; invalid and duplicate results are rejected atomically',async()=>{
+   await db.exec(`INSERT INTO public.admin_users(user_id) VALUES('dddddddd-dddd-4ddd-8ddd-dddddddddddd');SET ROLE authenticated;SET request.jwt.claims='{"role":"authenticated","sub":"dddddddd-dddd-4ddd-8ddd-dddddddddddd","session_id":"eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee","aal":"aal1"}';`);
    const r=await db.query('SELECT public.is_admin() AS ok');assert.equal(r.rows[0].ok,true);
    await db.query(`INSERT INTO public.cupons(code,discount) VALUES('QA','Test')`);
    await assert.rejects(db.query(`INSERT INTO public.cupons(code,discount) VALUES($1,'Test')`,["BAD'CODE"]));
@@ -62,8 +62,15 @@ test('PostgreSQL migration and authorization regression suite',async t=>{
    await asAnon();const a=await db.query(`SELECT public.get_public_matches(NULL,0,200) AS data`);assert.match(a.rows[0].data[0].playerGameId,/\*/);
    const b=await db.query(`SELECT public.get_public_matches($1,0,200) AS data`,[token]);assert.equal(b.rows[0].data[0].playerGameId,'99999001');await asOwner();
   });
+  await t.test('Password-only admin still requires a matching unexpired session younger than eight hours',async()=>{
+   for(const condition of ["created_at=now()-interval '9 hours'","not_after=now()-interval '1 second'","user_id='33333333-3333-4333-8333-333333333333'"]){
+    await db.exec(`UPDATE auth.sessions SET ${condition} WHERE id='eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee';SET ROLE authenticated;SET request.jwt.claims='{"role":"authenticated","sub":"dddddddd-dddd-4ddd-8ddd-dddddddddddd","session_id":"eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee","aal":"aal1"}';`);
+    const r=await db.query('SELECT public.is_admin() AS ok');assert.equal(r.rows[0].ok,false);await assert.rejects(db.query(`INSERT INTO public.cupons(code,discount) VALUES('EXPIRED','Test')`));
+    await asOwner();await db.exec(`UPDATE auth.sessions SET user_id='dddddddd-dddd-4ddd-8ddd-dddddddddddd',created_at=now(),not_after=NULL WHERE id='eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee'`);
+   }
+  });
   await t.test('Editing and deleting results update totals atomically; null dates stay distinct',async()=>{
-   await db.exec(`SET ROLE authenticated;SET request.jwt.claims='{"role":"authenticated","sub":"dddddddd-dddd-4ddd-8ddd-dddddddddddd","session_id":"eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee","aal":"aal2"}';`);
+   await db.exec(`SET ROLE authenticated;SET request.jwt.claims='{"role":"authenticated","sub":"dddddddd-dddd-4ddd-8ddd-dddddddddddd","session_id":"eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee","aal":"aal1"}';`);
    const existing=await db.query(`SELECT id FROM public.partidas WHERE number='QA_MATCH'`);
    await db.query(`SELECT public.edit_match_group('QA_EDIT','2026-10-10',$1::jsonb)`,[JSON.stringify([{matchId:existing.rows[0].id,kills:3,pos:2,total:22}])]);
    const updated=await db.query(`SELECT kills,earnings,"matchesCount" FROM public.jogadores WHERE id='11111111-1111-4111-8111-111111111111'`);assert.deepEqual(updated.rows[0],{kills:3,earnings:'22.00',matchesCount:1});
@@ -72,12 +79,12 @@ test('PostgreSQL migration and authorization regression suite',async t=>{
    const entries=JSON.stringify([{playerId:'22222222-2222-4222-8222-222222222222',kills:1,pos:1,killValue:2,bonus:0}]);
    for(const date of ['initial','sem_data'])await db.query(`SELECT public.add_match_with_players('QA_NULL',$1,$2::jsonb)`,[date,entries]);
    await asOwner();await db.exec(`UPDATE public.partidas SET date=NULL WHERE number='QA_NULL' AND date='initial'`);
-   await db.exec(`SET ROLE authenticated;SET request.jwt.claims='{"role":"authenticated","sub":"dddddddd-dddd-4ddd-8ddd-dddddddddddd","session_id":"eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee","aal":"aal2"}';`);
+   await db.exec(`SET ROLE authenticated;SET request.jwt.claims='{"role":"authenticated","sub":"dddddddd-dddd-4ddd-8ddd-dddddddddddd","session_id":"eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee","aal":"aal1"}';`);
    const count=await db.query(`SELECT public.delete_match_group('QA_NULL',NULL) AS n`);assert.equal(count.rows[0].n,1);
    const remaining=await db.query(`SELECT date FROM public.partidas WHERE number='QA_NULL'`);assert.deepEqual(remaining.rows,[{date:'sem_data'}]);await asOwner();
   });
   await t.test('Revoked admin session and banned player lose authorization',async()=>{
-   await db.exec(`DELETE FROM auth.sessions WHERE id='eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee';SET ROLE authenticated;SET request.jwt.claims='{"role":"authenticated","sub":"dddddddd-dddd-4ddd-8ddd-dddddddddddd","session_id":"eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee","aal":"aal2"}';`);const r=await db.query('SELECT public.is_admin() AS ok');assert.equal(r.rows[0].ok,false);await asOwner();
+   await db.exec(`DELETE FROM auth.sessions WHERE id='eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee';SET ROLE authenticated;SET request.jwt.claims='{"role":"authenticated","sub":"dddddddd-dddd-4ddd-8ddd-dddddddddddd","session_id":"eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee","aal":"aal1"}';`);const r=await db.query('SELECT public.is_admin() AS ok');assert.equal(r.rows[0].ok,false);await asOwner();
    await db.exec(`UPDATE public.jogadores SET status='banned' WHERE id='11111111-1111-4111-8111-111111111111'`);await asAnon();const s=await db.query(`SELECT * FROM public.player_session_login($1)`,[token]);assert.ok(s.rows[0].error);await asOwner();
   });
   await t.test('Audit metadata records mutations without message contents',async()=>{

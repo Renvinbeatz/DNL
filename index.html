@@ -242,17 +242,6 @@
     </section>
 
   </main>
-  <div class="modal-overlay" id="modal-admin-mfa" role="dialog" aria-modal="true" aria-hidden="true">
-    <div class="modal-content"><h3>Verificação em duas etapas</h3>
-      <p id="mfa-instructions">Digite o código do seu aplicativo autenticador.</p>
-      <img id="mfa-qr" class="hidden" alt="QR para configurar o autenticador" width="200" height="200">
-      <form data-submit="handleAdminMfa"><label for="mfa-code">Código de 6 dígitos</label>
-      <input id="mfa-code" class="form-control" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" required>
-      <button class="btn-primary" type="submit">VERIFICAR</button></form>
-      <button class="btn-secondary" data-click="cancelAdminMfa">CANCELAR</button>
-    </div>
-  </div>
-
   <div class="modal-overlay" role="dialog" aria-modal="true" aria-hidden="true" id="modal-medal-info">
     <div class="modal-content" style="max-width: 320px; text-align: center;">
       <div class="modal-header" style="justify-content: flex-end; border-bottom: none; margin-bottom: 4px;">

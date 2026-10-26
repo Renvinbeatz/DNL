@@ -18,7 +18,6 @@
     let playerToken = sessionStorage.getItem(PLAYER_SESSION_KEY) || '';
     let connectionState = 'connecting';
     let fetching = null;
-    let mfaFactorId = '';
     const actionLocks = new Set();
     const safeId = /^[0-9]{3,20}$/;
     const uuidPattern = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
@@ -354,8 +353,17 @@
       if (error || !data.user) { showToast('Não foi possível autenticar. Confira as credenciais ou aguarde.', 'danger'); return; }
       const membership=await _supabase.from('admin_users').select('role').eq('user_id',data.user.id).maybeSingle();
       if (membership.error || !membership.data) { await _supabase.auth.signOut(); showToast('Não foi possível autenticar o administrador.', 'danger'); return; }
-      try { await prepareAdminMfa(); }
-      catch (error) { await _supabase.auth.signOut({scope:'local'}); throw error; }
+      try {
+        const allowed=await checked(_supabase.rpc('is_admin'));
+        if(allowed!==true) throw new Error('Acesso não autorizado.');
+        if(fetching) await fetching;
+        await fetchFromDatabase();
+        if(!state.isAdminAuthenticated || connectionState!=='online') throw new Error('Serviço indisponível.');
+        closeModal('modal-admin-auth'); openAdminPanel(); showToast('Administrador autenticado.');
+      } catch (error) {
+        state.isAdminAuthenticated=false; state.players=[]; state.matches=[]; state.messages=[]; state.coupons=[];
+        renderAll(); await _supabase.auth.signOut({scope:'local'}); throw error;
+      }
     }
 
     async function adminLogout() {
@@ -1355,46 +1363,6 @@
       throw new Error('Histórico excede o limite de consulta.');
     }
 
-    async function prepareAdminMfa() {
-      const {data,error}=await _supabase.auth.mfa.listFactors();
-      if(error) throw error;
-      const verified=data.totp.find(f=>f.status==='verified');
-      const image=document.getElementById('mfa-qr'); image.removeAttribute('src'); image.classList.add('hidden');
-      if(verified) { mfaFactorId=verified.id; document.getElementById('mfa-instructions').textContent='Digite o código do seu aplicativo autenticador.'; }
-      else {
-        for(const factor of data.totp.filter(f=>f.status==='unverified')) {
-          const removed=await _supabase.auth.mfa.unenroll({factorId:factor.id});
-          if(removed.error) throw removed.error;
-        }
-        const result=await _supabase.auth.mfa.enroll({factorType:'totp',friendlyName:'NOVA '+Date.now(),issuer:'NOVA LEAGUE'});
-        if(result.error) throw result.error;
-        mfaFactorId=result.data.id;
-        const qr=result.data.totp.qr_code;
-        if(typeof qr!=='string' || !qr.startsWith('data:image/svg+xml')) throw new Error('QR inválido.');
-        image.src=qr; image.classList.remove('hidden');
-        document.getElementById('mfa-instructions').textContent='Adicione este QR ao seu aplicativo autenticador e confirme o código para proteger o painel.';
-      }
-      closeModal('modal-admin-auth'); openModal('modal-admin-mfa');
-    }
-
-    async function handleAdminMfa() {
-      const code=document.getElementById('mfa-code').value.trim();
-      if(!/^[0-9]{6}$/.test(code) || !mfaFactorId) throw new Error('Código inválido.');
-      const {error}=await _supabase.auth.mfa.challengeAndVerify({factorId:mfaFactorId,code});
-      document.getElementById('mfa-code').value='';
-      if(error) { showToast('Não foi possível verificar o código. Confira ou aguarde.','danger'); return; }
-      const allowed=await checked(_supabase.rpc('is_admin'));
-      if(allowed!==true) { await cancelAdminMfa(); throw new Error('Acesso não autorizado.'); }
-      mfaFactorId=''; document.getElementById('mfa-qr').removeAttribute('src');
-      closeModal('modal-admin-mfa'); state.isAdminAuthenticated=true;
-      await fetchFromDatabase(); openAdminPanel(); showToast('Administrador autenticado.');
-    }
-
-    async function cancelAdminMfa() {
-      mfaFactorId=''; document.getElementById('mfa-qr').removeAttribute('src'); document.getElementById('mfa-code').value='';
-      closeModal('modal-admin-mfa'); await adminLogout();
-    }
-
     const actions = {
       handleSecretAdminTrigger: ()=>handleSecretAdminTrigger(),
       openModal: (el)=>openModal(el.dataset.arg), closeModal: (el)=>closeModal(el.dataset.arg),
@@ -1415,7 +1383,7 @@
       handleAdminAuth:()=>handleAdminAuth(), handleAddPlayer:()=>handleAddPlayer(),
       handleBulkPlayersImport:()=>handleBulkPlayersImport(), handleAddMatch:()=>handleAddMatch(),
       handleEditMatch:()=>handleEditMatch(), handleBulkImport:()=>handleBulkImport(),
-      handleAddCoupon:()=>handleAddCoupon(), handleAdminMfa:()=>handleAdminMfa(), cancelAdminMfa:()=>cancelAdminMfa()
+      handleAddCoupon:()=>handleAddCoupon()
     };
     const adminActions=new Set(['switchAdminSubtab','openAddMatchModal','addPlayerRowToMatch','removePlayerRow','openEditMatchModal','deleteMatchGroup','updatePlayerStatus','toggleMedalFlag','deleteCoupon','deleteMessage','handleSendMessage','handleAddPlayer','handleBulkPlayersImport','handleAddMatch','handleEditMatch','handleBulkImport','handleAddCoupon']);
 
@@ -1441,7 +1409,7 @@
     document.addEventListener('keydown',event=>{
       lastInteraction=Date.now();
       const modal=document.querySelector('.modal-overlay.active');
-      if(event.key==='Escape' && modal) { if(modal.id==='modal-admin-mfa') void cancelAdminMfa().catch(()=>{}); else closeModal(modal.id); }
+      if(event.key==='Escape' && modal) closeModal(modal.id);
       if(event.key==='Tab' && modal){
         const controls=[...modal.querySelectorAll('button,input,select,textarea,a[href],[tabindex="0"]')].filter(e=>!e.disabled && !e.closest('.hidden'));
         const first=controls[0],last=controls.at(-1);

@@ -1,5 +1,17 @@
 # Relatório de segurança — Diário da NØVA
 
+## Atualização de 21/10/2026 — acesso administrativo sem segundo fator
+
+Por solicitação do proprietário, foi removida a exigência de duas etapas do painel. O frontend autentica por e-mail e senha e consulta `is_admin` antes de abrir o painel. A nova migração `20261021044448_security_hardening_07.sql` retira o requisito `aal2`, mantendo associação em `admin_users`, conferência da sessão no servidor, revogação e duração máxima de oito horas. Não há mais modal, QR, cadastro ou desafio de autenticador no código da aplicação. Fatores de contas reais não foram removidos.
+
+O conjunto atualizado passou em 32 verificações locais, incluindo entrada administrativa sem segundo fator, recusa de contas sem permissão, sessão expirada ou de outro usuário e preservação das regras de mensagens e jogadores. A ausência do segundo fator faz a proteção administrativa depender da senha e da sessão do Supabase Auth; é a configuração solicitada.
+
+Para quem já aplicou as seis migrações anteriores, foi preparado `security/remove-admin-mfa.sql`, contendo apenas a atualização incremental. Para quem ainda não as aplicou, `security/apply-security.sql` passou a incluir as sete migrações em ordem. Não reaplicar o pacote completo em banco já migrado. Ambos os pacotes são gerados das migrações pelo script de empacotamento.
+
+Esta atualização foi feita somente no repositório, respeitando a preferência por implantação manual. O estado remoto não foi consultado nem alterado nesta etapa. As seções abaixo preservam o registro da auditoria de 10/10/2026; referências à obrigatoriedade de MFA e às seis migrações descrevem a versão anterior e são substituídas por esta atualização.
+
+## Registro da auditoria de 10/10/2026
+
 Data: 10/10/2026. Site: https://novaleague.vercel.app/. Projeto Supabase examinado: `aqvyehkrbjttvdirtjzd`. Escopo: código do site, esquema, permissões, funções e políticas do banco, dependências e cabeçalhos públicos.
 
 ## Resultado e situação real da entrega
