@@ -245,7 +245,7 @@
           ? `R$ ${parseFloat(p.earnings).toFixed(2)}`
           : `${p.kills} Kills`;
         const subValue = isBooyahs
-          ? `${p.top2} Top 2`
+          ? `<span title="Top 2" aria-label="${p.top2} ${p.top2===1 ? 'segundo lugar' : 'segundos lugares'}">${p.top2}x <span aria-hidden="true">🥈</span></span>`
           : currentRankingType === 'earnings'
           ? `${p.kills} kills`
           : `R$ ${parseFloat(p.earnings).toFixed(2)}`;

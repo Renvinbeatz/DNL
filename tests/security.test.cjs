@@ -60,7 +60,8 @@ test('Booyah ranking counts Top 1 first, uses Top 2 for ties and includes podium
  const rows=[...a.w.document.querySelectorAll('#ranking-list-container .ranking-entry')];
  assert.deepEqual(rows.map(row=>row.querySelector('strong').textContent),['Clara','Alice','Bruno','Dani']);
  assert.deepEqual(rows.map(row=>row.querySelector('.ranking-main-value').textContent.trim()),['2 Booyahs','2 Booyahs','1 Booyah','0 Booyahs']);
- assert.deepEqual(rows.map(row=>row.querySelector('.ranking-sub-value').textContent),['1 Top 2','0 Top 2','3 Top 2','1 Top 2']);
+ assert.deepEqual(rows.map(row=>row.querySelector('.ranking-sub-value').textContent),['1x 🥈','0x 🥈','3x 🥈','1x 🥈']);
+ assert.equal(rows[0].querySelector('.ranking-sub-value [aria-label]').getAttribute('aria-label'),'1 segundo lugar');
  assert.ok(parseFloat(rows[0].querySelector('.ranking-sub-value').style.fontSize)<parseFloat(rows[0].querySelector('.ranking-main-value').style.fontSize));
  assert.equal(a.w.document.getElementById('tab-ranking-booyahs').getAttribute('aria-pressed'),'true');
  a.dom.window.close();
@@ -69,7 +70,7 @@ test('Booyah ranking counts Top 1 first, uses Top 2 for ties and includes podium
 test('Booyah totals recalculate after editing/deleting a result and do not leak into other ranking categories',()=>{
  const a=app();a.run(`state.players=[{id:'a',nick:'Alice',gameId:'12345',kills:7,earnings:12,matchesCount:1}];state.matches=[{id:'1',playerId:'a',pos:1}];switchRankingType('booyahs')`);
  assert.equal(a.w.document.querySelector('.ranking-main-value').textContent.trim(),'1 Booyah');
- a.run(`state.matches[0].pos=2;renderRankingList()`);assert.equal(a.w.document.querySelector('.ranking-main-value').textContent.trim(),'0 Booyahs');assert.equal(a.w.document.querySelector('.ranking-sub-value').textContent,'1 Top 2');
+ a.run(`state.matches[0].pos=2;renderRankingList()`);assert.equal(a.w.document.querySelector('.ranking-main-value').textContent.trim(),'0 Booyahs');assert.equal(a.w.document.querySelector('.ranking-sub-value').textContent,'1x 🥈');
  a.run(`switchRankingType('kills')`);assert.equal(a.w.document.querySelector('.ranking-main-value').textContent.trim(),'7 Kills');
  a.run(`switchRankingType('earnings')`);assert.equal(a.w.document.querySelector('.ranking-main-value').textContent.trim(),'R$ 12.00');
  a.run(`state.matches=[];switchRankingType('booyahs')`);assert.equal(a.w.document.querySelectorAll('.ranking-entry').length,0);assert.match(a.w.document.getElementById('ranking-list-container').textContent,/Nenhum Top 1 ou Top 2/);
