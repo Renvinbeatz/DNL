@@ -1,5 +1,9 @@
 # Relatório de segurança — Diário da NØVA
 
+## Auditoria atual
+
+A revisão completa de 26/10/2026 está em [AUDITORIA-2026-10-26.md](AUDITORIA-2026-10-26.md), com verificações de produção, novas reproduções, correções locais e pendências. Os registros abaixo são históricos: não representam sozinhos o estado atual do site. A nova atualização incremental é `audit-fixes-2026-10-26.sql` (migração 08); a publicação e aplicação continuam manuais.
+
 ## Atualização de 26/10/2026 — espera após login recusado
 
 Foi adicionado um intervalo de 15 segundos na interface após credenciais inválidas, ID recusado ou conta sem permissão administrativa. A espera vale para os dois formulários no mesmo navegador, mostra contagem regressiva, impede novo envio inclusive por Enter, persiste ao recarregar e é sincronizada entre abas. Tentativas durante a espera não renovam o prazo. Ao terminar, o botão volta ao estado de envio; uma nova tentativa recusada inicia outro intervalo. Campos inválidos detectados pelo navegador também iniciam a espera. Erros de rede não são penalizados como erro de credencial.

@@ -172,6 +172,10 @@
           <i class="fa-solid fa-comment-dots"></i>
           <span>Mensagens</span>
         </div>
+        <div role="button" tabindex="0" class="admin-tile" data-click="switchAdminSubtab" data-arg="finances">
+          <i class="fa-solid fa-wallet" aria-hidden="true"></i>
+          <span>Ganhos</span>
+        </div>
       </div>
 
       <div id="admin-sub-players" class="card">
@@ -219,6 +223,42 @@
           <button class="btn-copy" data-click="openModal" data-arg="modal-add-coupon">+ NOVO CUPOM</button>
         </div>
         <div id="admin-coupons-table-body"></div>
+      </div>
+
+      <div id="admin-sub-finances" class="card hidden">
+        <div class="finance-heading">
+          <h4 class="finance-title">GANHOS DA LIGA</h4>
+          <button type="button" class="btn-copy" data-click="loadAdminFinances">ATUALIZAR</button>
+        </div>
+        <p class="finance-description">R$ 6,00 por participação registrada. As premiações seguem o mesmo total do painel.</p>
+        <p id="finance-status" class="finance-status" role="status">Entre no painel para consultar os valores.</p>
+        <div class="finance-grid" aria-label="Resumo de ganhos">
+          <div class="stat-card accent-gold">
+            <div class="stat-label">TOTAL ACUMULADO <span class="finance-mode">AUTO</span></div>
+            <div id="finance-accumulated" class="stat-val">—</div>
+          </div>
+          <div class="stat-card accent-green">
+            <div class="stat-label">REPASSADO EM PREMIAÇÃO <span class="finance-mode">AUTO</span></div>
+            <div id="finance-payout" class="stat-val">—</div>
+          </div>
+          <div class="stat-card accent-purple">
+            <div class="stat-label">GASTO COM ANÚNCIOS <span class="finance-mode">MANUAL</span></div>
+            <div id="finance-ad-spend" class="stat-val">—</div>
+          </div>
+          <div class="stat-card accent-gold finance-balance-card">
+            <div class="stat-label">SALDO FINAL <span class="finance-mode">AUTO</span></div>
+            <div id="finance-balance" class="stat-val">—</div>
+            <p class="finance-note">Acumulado − premiações − anúncios</p>
+          </div>
+        </div>
+        <form id="form-ad-spend" data-submit="handleSaveAdSpend" class="finance-form">
+          <div class="form-group">
+            <label for="finance-ad-spend-input">GASTO TOTAL COM ANÚNCIOS (R$)</label>
+            <input id="finance-ad-spend-input" type="number" inputmode="decimal" class="form-control" min="0" max="1000000000" step="0.01" placeholder="0,00" aria-describedby="finance-ad-spend-help" required disabled>
+            <p id="finance-ad-spend-help" class="finance-note">Informe o valor total gasto até agora. Ao salvar, ele substitui o valor anterior.</p>
+          </div>
+          <button type="submit" class="btn-primary" disabled>SALVAR GASTO COM ANÚNCIOS</button>
+        </form>
       </div>
 
       <div id="admin-sub-messages" class="card hidden">

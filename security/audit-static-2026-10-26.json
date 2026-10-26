@@ -1,0 +1,18 @@
+{
+  "at": "2026-10-26T08:20:55.578Z",
+  "workingFiles": 30,
+  "historyBlobs": 84,
+  "skippedBinaryOrLarge": 2,
+  "findings": [],
+  "limits": "Heuristic patterns; does not prove absence of every secret. No credential values are recorded.",
+  "distFiles": [
+    "app.js",
+    "assets/supabase.js",
+    "index.html",
+    "logo.png",
+    "manifest.json",
+    "public-config.js",
+    "styles.css"
+  ],
+  "distAllowlistOnly": true
+}

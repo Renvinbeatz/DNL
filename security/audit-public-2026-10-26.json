@@ -1,0 +1,468 @@
+{
+  "at": "2026-10-26T08:09:46.345Z",
+  "scope": [
+    "https://novaleague.vercel.app",
+    "https://aqvyehkrbjttvdirtjzd.supabase.co"
+  ],
+  "checks": [
+    {
+      "origin": "http://novaleague.vercel.app",
+      "path": "/",
+      "method": "HEAD",
+      "status": 308,
+      "headers": {
+        "location": "https://novaleague.vercel.app/"
+      },
+      "bytes": 0
+    },
+    {
+      "origin": "https://novaleague.vercel.app",
+      "path": "/",
+      "method": "GET",
+      "status": 200,
+      "headers": {
+        "content-security-policy": "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data:; connect-src https://aqvyehkrbjttvdirtjzd.supabase.co wss://aqvyehkrbjttvdirtjzd.supabase.co; manifest-src 'self'; base-uri 'none'; form-action 'self'; object-src 'none'; frame-ancestors 'none'; upgrade-insecure-requests",
+        "x-frame-options": "DENY",
+        "x-content-type-options": "nosniff",
+        "referrer-policy": "no-referrer",
+        "strict-transport-security": "max-age=31536000; includeSubDomains",
+        "permissions-policy": "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
+        "cache-control": "no-store",
+        "access-control-allow-origin": "https://novaleague.vercel.app",
+        "access-control-allow-methods": "GET, HEAD"
+      },
+      "bytes": 31068,
+      "matchesLocal": false
+    },
+    {
+      "origin": "https://novaleague.vercel.app",
+      "path": "/app.js",
+      "method": "GET",
+      "status": 200,
+      "headers": {
+        "content-security-policy": "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data:; connect-src https://aqvyehkrbjttvdirtjzd.supabase.co wss://aqvyehkrbjttvdirtjzd.supabase.co; manifest-src 'self'; base-uri 'none'; form-action 'self'; object-src 'none'; frame-ancestors 'none'; upgrade-insecure-requests",
+        "x-frame-options": "DENY",
+        "x-content-type-options": "nosniff",
+        "referrer-policy": "no-referrer",
+        "strict-transport-security": "max-age=31536000; includeSubDomains",
+        "permissions-policy": "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
+        "cache-control": "no-store",
+        "access-control-allow-origin": "https://novaleague.vercel.app",
+        "access-control-allow-methods": "GET, HEAD"
+      },
+      "bytes": 77531,
+      "matchesLocal": false
+    },
+    {
+      "origin": "https://novaleague.vercel.app",
+      "path": "/public-config.js",
+      "method": "GET",
+      "status": 200,
+      "headers": {
+        "content-security-policy": "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data:; connect-src https://aqvyehkrbjttvdirtjzd.supabase.co wss://aqvyehkrbjttvdirtjzd.supabase.co; manifest-src 'self'; base-uri 'none'; form-action 'self'; object-src 'none'; frame-ancestors 'none'; upgrade-insecure-requests",
+        "x-frame-options": "DENY",
+        "x-content-type-options": "nosniff",
+        "referrer-policy": "no-referrer",
+        "strict-transport-security": "max-age=31536000; includeSubDomains",
+        "permissions-policy": "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
+        "cache-control": "no-store",
+        "access-control-allow-origin": "https://novaleague.vercel.app",
+        "access-control-allow-methods": "GET, HEAD"
+      },
+      "bytes": 266,
+      "matchesLocal": true
+    },
+    {
+      "origin": "https://novaleague.vercel.app",
+      "path": "/assets/supabase.js",
+      "method": "GET",
+      "status": 200,
+      "headers": {
+        "content-security-policy": "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data:; connect-src https://aqvyehkrbjttvdirtjzd.supabase.co wss://aqvyehkrbjttvdirtjzd.supabase.co; manifest-src 'self'; base-uri 'none'; form-action 'self'; object-src 'none'; frame-ancestors 'none'; upgrade-insecure-requests",
+        "x-frame-options": "DENY",
+        "x-content-type-options": "nosniff",
+        "referrer-policy": "no-referrer",
+        "strict-transport-security": "max-age=31536000; includeSubDomains",
+        "permissions-policy": "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
+        "cache-control": "no-store",
+        "access-control-allow-origin": "https://novaleague.vercel.app",
+        "access-control-allow-methods": "GET, HEAD"
+      },
+      "bytes": 222386,
+      "matchesLocal": true
+    },
+    {
+      "origin": "https://novaleague.vercel.app",
+      "path": "/.env",
+      "method": "GET",
+      "status": 404,
+      "headers": {
+        "content-security-policy": "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data:; connect-src https://aqvyehkrbjttvdirtjzd.supabase.co wss://aqvyehkrbjttvdirtjzd.supabase.co; manifest-src 'self'; base-uri 'none'; form-action 'self'; object-src 'none'; frame-ancestors 'none'; upgrade-insecure-requests",
+        "x-frame-options": "DENY",
+        "x-content-type-options": "nosniff",
+        "referrer-policy": "no-referrer",
+        "strict-transport-security": "max-age=31536000; includeSubDomains",
+        "permissions-policy": "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
+        "cache-control": "no-store",
+        "access-control-allow-origin": "https://novaleague.vercel.app",
+        "access-control-allow-methods": "GET, HEAD"
+      },
+      "bytes": 79
+    },
+    {
+      "origin": "https://novaleague.vercel.app",
+      "path": "/.env.local",
+      "method": "GET",
+      "status": 404,
+      "headers": {
+        "content-security-policy": "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data:; connect-src https://aqvyehkrbjttvdirtjzd.supabase.co wss://aqvyehkrbjttvdirtjzd.supabase.co; manifest-src 'self'; base-uri 'none'; form-action 'self'; object-src 'none'; frame-ancestors 'none'; upgrade-insecure-requests",
+        "x-frame-options": "DENY",
+        "x-content-type-options": "nosniff",
+        "referrer-policy": "no-referrer",
+        "strict-transport-security": "max-age=31536000; includeSubDomains",
+        "permissions-policy": "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
+        "cache-control": "no-store",
+        "access-control-allow-origin": "https://novaleague.vercel.app",
+        "access-control-allow-methods": "GET, HEAD"
+      },
+      "bytes": 79
+    },
+    {
+      "origin": "https://novaleague.vercel.app",
+      "path": "/.git/config",
+      "method": "GET",
+      "status": 404,
+      "headers": {
+        "content-security-policy": "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data:; connect-src https://aqvyehkrbjttvdirtjzd.supabase.co wss://aqvyehkrbjttvdirtjzd.supabase.co; manifest-src 'self'; base-uri 'none'; form-action 'self'; object-src 'none'; frame-ancestors 'none'; upgrade-insecure-requests",
+        "x-frame-options": "DENY",
+        "x-content-type-options": "nosniff",
+        "referrer-policy": "no-referrer",
+        "strict-transport-security": "max-age=31536000; includeSubDomains",
+        "permissions-policy": "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
+        "cache-control": "no-store",
+        "access-control-allow-origin": "https://novaleague.vercel.app",
+        "access-control-allow-methods": "GET, HEAD"
+      },
+      "bytes": 79
+    },
+    {
+      "origin": "https://novaleague.vercel.app",
+      "path": "/package.json",
+      "method": "GET",
+      "status": 404,
+      "headers": {
+        "content-security-policy": "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data:; connect-src https://aqvyehkrbjttvdirtjzd.supabase.co wss://aqvyehkrbjttvdirtjzd.supabase.co; manifest-src 'self'; base-uri 'none'; form-action 'self'; object-src 'none'; frame-ancestors 'none'; upgrade-insecure-requests",
+        "x-frame-options": "DENY",
+        "x-content-type-options": "nosniff",
+        "referrer-policy": "no-referrer",
+        "strict-transport-security": "max-age=31536000; includeSubDomains",
+        "permissions-policy": "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
+        "cache-control": "no-store",
+        "access-control-allow-origin": "https://novaleague.vercel.app",
+        "access-control-allow-methods": "GET, HEAD"
+      },
+      "bytes": 79
+    },
+    {
+      "origin": "https://novaleague.vercel.app",
+      "path": "/security/apply-security.sql",
+      "method": "GET",
+      "status": 404,
+      "headers": {
+        "content-security-policy": "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data:; connect-src https://aqvyehkrbjttvdirtjzd.supabase.co wss://aqvyehkrbjttvdirtjzd.supabase.co; manifest-src 'self'; base-uri 'none'; form-action 'self'; object-src 'none'; frame-ancestors 'none'; upgrade-insecure-requests",
+        "x-frame-options": "DENY",
+        "x-content-type-options": "nosniff",
+        "referrer-policy": "no-referrer",
+        "strict-transport-security": "max-age=31536000; includeSubDomains",
+        "permissions-policy": "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
+        "cache-control": "no-store",
+        "access-control-allow-origin": "https://novaleague.vercel.app",
+        "access-control-allow-methods": "GET, HEAD"
+      },
+      "bytes": 79
+    },
+    {
+      "origin": "https://novaleague.vercel.app",
+      "path": "/tests/legacy-schema.sql",
+      "method": "GET",
+      "status": 404,
+      "headers": {
+        "content-security-policy": "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data:; connect-src https://aqvyehkrbjttvdirtjzd.supabase.co wss://aqvyehkrbjttvdirtjzd.supabase.co; manifest-src 'self'; base-uri 'none'; form-action 'self'; object-src 'none'; frame-ancestors 'none'; upgrade-insecure-requests",
+        "x-frame-options": "DENY",
+        "x-content-type-options": "nosniff",
+        "referrer-policy": "no-referrer",
+        "strict-transport-security": "max-age=31536000; includeSubDomains",
+        "permissions-policy": "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
+        "cache-control": "no-store",
+        "access-control-allow-origin": "https://novaleague.vercel.app",
+        "access-control-allow-methods": "GET, HEAD"
+      },
+      "bytes": 79
+    },
+    {
+      "origin": "https://novaleague.vercel.app",
+      "path": "/app.js.map",
+      "method": "GET",
+      "status": 404,
+      "headers": {
+        "content-security-policy": "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data:; connect-src https://aqvyehkrbjttvdirtjzd.supabase.co wss://aqvyehkrbjttvdirtjzd.supabase.co; manifest-src 'self'; base-uri 'none'; form-action 'self'; object-src 'none'; frame-ancestors 'none'; upgrade-insecure-requests",
+        "x-frame-options": "DENY",
+        "x-content-type-options": "nosniff",
+        "referrer-policy": "no-referrer",
+        "strict-transport-security": "max-age=31536000; includeSubDomains",
+        "permissions-policy": "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
+        "cache-control": "no-store",
+        "access-control-allow-origin": "https://novaleague.vercel.app",
+        "access-control-allow-methods": "GET, HEAD"
+      },
+      "bytes": 79
+    },
+    {
+      "origin": "https://novaleague.vercel.app",
+      "path": "/supabase/migrations/20261021044448_security_hardening_07.sql",
+      "method": "GET",
+      "status": 404,
+      "headers": {
+        "content-security-policy": "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data:; connect-src https://aqvyehkrbjttvdirtjzd.supabase.co wss://aqvyehkrbjttvdirtjzd.supabase.co; manifest-src 'self'; base-uri 'none'; form-action 'self'; object-src 'none'; frame-ancestors 'none'; upgrade-insecure-requests",
+        "x-frame-options": "DENY",
+        "x-content-type-options": "nosniff",
+        "referrer-policy": "no-referrer",
+        "strict-transport-security": "max-age=31536000; includeSubDomains",
+        "permissions-policy": "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
+        "cache-control": "no-store",
+        "access-control-allow-origin": "https://novaleague.vercel.app",
+        "access-control-allow-methods": "GET, HEAD"
+      },
+      "bytes": 79
+    },
+    {
+      "origin": "https://novaleague.vercel.app",
+      "path": "/%2e%2e/.env",
+      "method": "GET",
+      "status": 404,
+      "headers": {
+        "content-security-policy": "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data:; connect-src https://aqvyehkrbjttvdirtjzd.supabase.co wss://aqvyehkrbjttvdirtjzd.supabase.co; manifest-src 'self'; base-uri 'none'; form-action 'self'; object-src 'none'; frame-ancestors 'none'; upgrade-insecure-requests",
+        "x-frame-options": "DENY",
+        "x-content-type-options": "nosniff",
+        "referrer-policy": "no-referrer",
+        "strict-transport-security": "max-age=31536000; includeSubDomains",
+        "permissions-policy": "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
+        "cache-control": "no-store",
+        "access-control-allow-origin": "https://novaleague.vercel.app",
+        "access-control-allow-methods": "GET, HEAD"
+      },
+      "bytes": 79
+    },
+    {
+      "origin": "https://aqvyehkrbjttvdirtjzd.supabase.co",
+      "path": "/rest/v1/jogadores?select=*&limit=0",
+      "method": "GET",
+      "status": 401,
+      "headers": {
+        "x-content-type-options": "nosniff",
+        "strict-transport-security": "max-age=31536000; includeSubDomains; preload"
+      },
+      "bytes": 188,
+      "errorCode": "42501"
+    },
+    {
+      "origin": "https://aqvyehkrbjttvdirtjzd.supabase.co",
+      "path": "/rest/v1/partidas?select=*&limit=0",
+      "method": "GET",
+      "status": 401,
+      "headers": {
+        "x-content-type-options": "nosniff",
+        "strict-transport-security": "max-age=31536000; includeSubDomains; preload"
+      },
+      "bytes": 186,
+      "errorCode": "42501"
+    },
+    {
+      "origin": "https://aqvyehkrbjttvdirtjzd.supabase.co",
+      "path": "/rest/v1/mensagens?select=*&limit=0",
+      "method": "GET",
+      "status": 401,
+      "headers": {
+        "x-content-type-options": "nosniff",
+        "strict-transport-security": "max-age=31536000; includeSubDomains; preload"
+      },
+      "bytes": 188,
+      "errorCode": "42501"
+    },
+    {
+      "origin": "https://aqvyehkrbjttvdirtjzd.supabase.co",
+      "path": "/rest/v1/player_sessions?select=*&limit=0",
+      "method": "GET",
+      "status": 401,
+      "headers": {
+        "x-content-type-options": "nosniff",
+        "strict-transport-security": "max-age=31536000; includeSubDomains; preload"
+      },
+      "bytes": 200,
+      "errorCode": "42501"
+    },
+    {
+      "origin": "https://aqvyehkrbjttvdirtjzd.supabase.co",
+      "path": "/rest/v1/admin_users?select=*&limit=0",
+      "method": "GET",
+      "status": 401,
+      "headers": {
+        "x-content-type-options": "nosniff",
+        "strict-transport-security": "max-age=31536000; includeSubDomains; preload"
+      },
+      "bytes": 192,
+      "errorCode": "42501"
+    },
+    {
+      "origin": "https://aqvyehkrbjttvdirtjzd.supabase.co",
+      "path": "/rest/v1/public_jogadores?select=*&limit=0",
+      "method": "GET",
+      "status": 401,
+      "headers": {
+        "x-content-type-options": "nosniff",
+        "strict-transport-security": "max-age=31536000; includeSubDomains; preload"
+      },
+      "bytes": 99,
+      "errorCode": "42501"
+    },
+    {
+      "origin": "https://aqvyehkrbjttvdirtjzd.supabase.co",
+      "path": "/rest/v1/cupons?select=*&limit=0",
+      "method": "GET",
+      "status": 200,
+      "headers": {
+        "x-content-type-options": "nosniff",
+        "strict-transport-security": "max-age=31536000; includeSubDomains; preload"
+      },
+      "bytes": 2
+    },
+    {
+      "origin": "https://aqvyehkrbjttvdirtjzd.supabase.co",
+      "path": "/rest/v1/rpc/get_public_players?p_offset=0&p_limit=1",
+      "method": "GET",
+      "status": 200,
+      "headers": {
+        "x-content-type-options": "nosniff",
+        "strict-transport-security": "max-age=31536000; includeSubDomains; preload"
+      },
+      "bytes": 188,
+      "observation": {
+        "rows": 1,
+        "fields": [
+          "id",
+          "nick",
+          "kills",
+          "gameId",
+          "earnings",
+          "is_honra",
+          "matchesCount",
+          "is_verificado"
+        ],
+        "masked": true
+      }
+    },
+    {
+      "origin": "https://aqvyehkrbjttvdirtjzd.supabase.co",
+      "path": "/rest/v1/rpc/get_public_matches?p_offset=0&p_limit=1",
+      "method": "GET",
+      "status": 200,
+      "headers": {
+        "x-content-type-options": "nosniff",
+        "strict-transport-security": "max-age=31536000; includeSubDomains; preload"
+      },
+      "bytes": 303,
+      "observation": {
+        "rows": 1,
+        "fields": [
+          "id",
+          "pos",
+          "date",
+          "kills",
+          "total",
+          "number",
+          "playerId",
+          "created_at",
+          "playerNick",
+          "playerGameId"
+        ],
+        "masked": true
+      }
+    },
+    {
+      "origin": "https://aqvyehkrbjttvdirtjzd.supabase.co",
+      "path": "/rest/v1/rpc/is_admin",
+      "method": "GET",
+      "status": 401,
+      "headers": {
+        "x-content-type-options": "nosniff",
+        "strict-transport-security": "max-age=31536000; includeSubDomains; preload"
+      },
+      "bytes": 95,
+      "errorCode": "42501"
+    },
+    {
+      "origin": "https://aqvyehkrbjttvdirtjzd.supabase.co",
+      "path": "/rest/v1/jogadores?select=id&limit=0",
+      "method": "GET",
+      "status": 406,
+      "headers": {
+        "x-content-type-options": "nosniff",
+        "strict-transport-security": "max-age=31536000; includeSubDomains; preload"
+      },
+      "bytes": 147,
+      "errorCode": "PGRST106"
+    },
+    {
+      "origin": "https://aqvyehkrbjttvdirtjzd.supabase.co",
+      "path": "/rest/v1/jogadores?select=id&limit=0",
+      "method": "GET",
+      "status": 401,
+      "headers": {
+        "x-content-type-options": "nosniff",
+        "strict-transport-security": "max-age=31536000; includeSubDomains; preload"
+      },
+      "bytes": 146,
+      "errorCode": "PGRST301"
+    },
+    {
+      "origin": "https://aqvyehkrbjttvdirtjzd.supabase.co",
+      "path": "/rest/v1/cupons?select=id&limit=0",
+      "method": "OPTIONS",
+      "status": 200,
+      "headers": {
+        "x-content-type-options": "nosniff",
+        "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+        "access-control-allow-origin": "*",
+        "access-control-allow-methods": "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS,TRACE,CONNECT"
+      },
+      "bytes": 0
+    },
+    {
+      "origin": "https://aqvyehkrbjttvdirtjzd.supabase.co",
+      "path": "/auth/v1/settings",
+      "method": "GET",
+      "status": 200,
+      "headers": {
+        "x-content-type-options": "nosniff",
+        "strict-transport-security": "max-age=31536000; includeSubDomains; preload"
+      },
+      "bytes": 611,
+      "observation": {
+        "disable_signup": false,
+        "mailer_autoconfirm": false,
+        "anonymous_users_enabled": false
+      }
+    },
+    {
+      "origin": "https://aqvyehkrbjttvdirtjzd.supabase.co",
+      "path": "/auth/v1/user",
+      "method": "GET",
+      "status": 401,
+      "headers": {
+        "x-content-type-options": "nosniff",
+        "strict-transport-security": "max-age=31536000; includeSubDomains; preload"
+      },
+      "bytes": 96
+    }
+  ]
+}

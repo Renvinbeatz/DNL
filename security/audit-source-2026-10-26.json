@@ -1,0 +1,49 @@
+{
+  "at": "2026-10-26T08:21:58.881Z",
+  "scope": [
+    "https://novaleague.vercel.app"
+  ],
+  "baselineRevision": "0953b7078a6a682014f82d3d8c80991b872b4f49",
+  "checks": [
+    {
+      "origin": "https://novaleague.vercel.app",
+      "path": "/",
+      "method": "GET",
+      "status": 200,
+      "headers": {
+        "content-security-policy": "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data:; connect-src https://aqvyehkrbjttvdirtjzd.supabase.co wss://aqvyehkrbjttvdirtjzd.supabase.co; manifest-src 'self'; base-uri 'none'; form-action 'self'; object-src 'none'; frame-ancestors 'none'; upgrade-insecure-requests",
+        "x-frame-options": "DENY",
+        "x-content-type-options": "nosniff",
+        "referrer-policy": "no-referrer",
+        "strict-transport-security": "max-age=31536000; includeSubDomains",
+        "permissions-policy": "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
+        "cache-control": "no-store",
+        "access-control-allow-origin": "https://novaleague.vercel.app",
+        "access-control-allow-methods": "GET, HEAD"
+      },
+      "bytes": 31068,
+      "matchesLocal": false,
+      "matchesCommittedNormalized": true
+    },
+    {
+      "origin": "https://novaleague.vercel.app",
+      "path": "/app.js",
+      "method": "GET",
+      "status": 200,
+      "headers": {
+        "content-security-policy": "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data:; connect-src https://aqvyehkrbjttvdirtjzd.supabase.co wss://aqvyehkrbjttvdirtjzd.supabase.co; manifest-src 'self'; base-uri 'none'; form-action 'self'; object-src 'none'; frame-ancestors 'none'; upgrade-insecure-requests",
+        "x-frame-options": "DENY",
+        "x-content-type-options": "nosniff",
+        "referrer-policy": "no-referrer",
+        "strict-transport-security": "max-age=31536000; includeSubDomains",
+        "permissions-policy": "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
+        "cache-control": "no-store",
+        "access-control-allow-origin": "https://novaleague.vercel.app",
+        "access-control-allow-methods": "GET, HEAD"
+      },
+      "bytes": 77531,
+      "matchesLocal": false,
+      "matchesCommittedNormalized": true
+    }
+  ]
+}

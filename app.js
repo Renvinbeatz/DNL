@@ -8,7 +8,8 @@
       players: [],
       matches: [],
       coupons: [],
-      messages: []
+      messages: [],
+      finances: null
     };
 
     // Token só nesta aba; validade renovável de 7 dias, limitada a 30 dias
@@ -18,6 +19,11 @@
     let playerToken = sessionStorage.getItem(PLAYER_SESSION_KEY) || '';
     let connectionState = 'connecting';
     let fetching = null;
+    let sessionEpoch = 0;
+    let financeFetching = null;
+    let financeReadEpoch = 0;
+    let financeLoadState = 'idle';
+    let financeDraftDirty = false;
     const actionLocks = new Set();
     const LOGIN_RETRY_KEY = 'nova_login_retry_until_v1';
     const LOGIN_RETRY_MS = 15000;
@@ -310,43 +316,57 @@
 
     // Busca os dados COMPARTILHADOS do Supabase — é isso que garante que
     // todo mundo (ADM e jogadores, em qualquer dispositivo) vê os mesmos dados.
+    function invalidateSessionReads() {
+      sessionEpoch++;
+      fetching=null;
+      financeFetching=null;financeReadEpoch++;financeLoadState='idle';financeDraftDirty=false;
+      Object.assign(state,{isAdminAuthenticated:false,currentPlayer:null,players:[],matches:[],coupons:[],messages:[],finances:null});
+    }
+
     async function fetchFromDatabase() {
       if (fetching) return fetching;
-      fetching = (async () => {
+      const epoch=sessionEpoch;
+      const token=playerToken;
+      const request = (async () => {
         if (!_supabase) { renderAll(); return; }
         connectionState = 'connecting'; updateConnectionBadge();
         try {
           const adminResult = await _supabase.rpc('is_admin');
-          state.isAdminAuthenticated = !adminResult.error && adminResult.data === true;
+          if(epoch!==sessionEpoch) return;
+          const isAdminAuthenticated = !adminResult.error && adminResult.data === true;
           const oldPlayer = state.currentPlayer;
           let currentPlayer = null;
-          if (playerToken) {
-            const result = await _supabase.rpc('player_session_login', { p_token: playerToken });
+          if (token) {
+            const result = await _supabase.rpc('player_session_login', { p_token: token });
+            if(epoch!==sessionEpoch) return;
             if (result.error) throw result.error;
             const row = result.data?.[0];
             if (row && !row.error) currentPlayer = row;
             else if (row?.error === 'Aguarde antes de atualizar.') throw new Error('rate');
             else { playerToken = ''; sessionStorage.removeItem(PLAYER_SESSION_KEY); }
           }
-          state.currentPlayer = currentPlayer;
           const [players, matches, coupons, messages] = await Promise.all([
-            state.isAdminAuthenticated ? readTablePages('jogadores', 'created_at') : readRpcPages('get_public_players'),
-            state.isAdminAuthenticated ? readTablePages('partidas', 'created_at') : readRpcPages('get_public_matches', { p_token: playerToken || null }),
+            isAdminAuthenticated ? readTablePages('jogadores', 'created_at') : readRpcPages('get_public_players'),
+            isAdminAuthenticated ? readTablePages('partidas', 'created_at') : readRpcPages('get_public_matches', { p_token: currentPlayer ? token : null }),
             readTablePages('cupons', 'created_at'),
-            state.isAdminAuthenticated ? readTablePages('mensagens', 'created_at') : playerToken ? checked(_supabase.rpc('get_my_messages', { p_token: playerToken })) : []
+            isAdminAuthenticated ? readTablePages('mensagens', 'created_at') : currentPlayer ? checked(_supabase.rpc('get_my_messages', { p_token: token })) : []
           ]);
-          Object.assign(state, { players, matches, coupons, messages });
+          if(epoch!==sessionEpoch) return;
+          Object.assign(state, { isAdminAuthenticated, currentPlayer, players, matches, coupons, messages });
           connectionState = 'online';
           if (oldPlayer && !currentPlayer) showToast('Seu acesso expirou. Entre novamente.', 'danger');
           renderAll();
+          if(isAdminAuthenticated && !document.getElementById('admin-sub-finances').classList.contains('hidden')) await loadAdminFinances(true);
         } catch (error) {
+          if(epoch!==sessionEpoch) return;
           connectionState = 'offline';
           // Prevent stale privileged data from surviving an expired admin session.
-          state.players=[]; state.matches=[]; state.messages=[]; state.coupons=[];
+          Object.assign(state,{isAdminAuthenticated:false,currentPlayer:null,players:[],matches:[],messages:[],coupons:[],finances:null});
           renderAll(); showToast('Não foi possível atualizar os dados. Tente novamente.', 'danger');
-        } finally { updateConnectionBadge(); }
+        } finally { if(epoch===sessionEpoch) updateConnectionBadge(); }
       })();
-      try { return await fetching; } finally { fetching = null; }
+      fetching=request;
+      try { return await request; } finally { if(fetching===request) fetching = null; }
     }
 
     function loginRetrySeconds() {
@@ -395,12 +415,15 @@
       if (!_supabase) throw new Error('offline');
       const id = document.getElementById('player-login-id').value.trim();
       if (!safeId.test(id)) {startLoginRetryWait();showToast('Digite um ID válido, com 3 a 20 números. Tente novamente em 15s.','danger');return;}
+      const epoch=sessionEpoch;
       const result = await checked(_supabase.rpc('player_login', { p_game_id: id }));
+      if(epoch!==sessionEpoch) return;
       const row = result?.[0];
       if (!row || row.error || !/^[a-f0-9]{64}$/.test(row.session_token || '')) {
         startLoginRetryWait();
         showToast(row?.error?.startsWith('Aguarde') ? 'Aguarde antes de tentar novamente.' : 'Não foi possível acessar. Confira seu ID ou fale com a organização.', 'danger'); return;
       }
+      invalidateSessionReads();
       playerToken = row.session_token; sessionStorage.setItem(PLAYER_SESSION_KEY, playerToken);
       state.currentPlayer = row; delete state.currentPlayer.session_token;
       document.getElementById('player-login-id').value = '';
@@ -410,7 +433,7 @@
 
     async function playerLogout() {
       const token=playerToken; playerToken=''; sessionStorage.removeItem(PLAYER_SESSION_KEY);
-      state.currentPlayer=null; state.messages=[]; state.matches=[]; renderAll();
+      invalidateSessionReads(); renderAll();
       if (_supabase && token) await checked(_supabase.rpc('player_session_logout', {p_token:token}));
       await fetchFromDatabase(); showToast('Acesso encerrado.');
     }
@@ -421,31 +444,41 @@
       const email=document.getElementById('admin-user-input').value.trim();
       const password=document.getElementById('admin-pass-input').value;
       if (email.length>254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || password.length<8 || password.length>1024) {startLoginRetryWait();showToast('Credenciais inválidas. Tente novamente em 15s.','danger');return;}
+      invalidateSessionReads();
+      const epoch=sessionEpoch;
       const {data,error}=await _supabase.auth.signInWithPassword({email,password});
       document.getElementById('admin-pass-input').value='';
+      if(epoch!==sessionEpoch) return;
       if (error || !data?.user) {
         if(!error || (error.name!=='AuthRetryableFetchError' && error.name!=='TypeError' && !(error.status>=500))) startLoginRetryWait();
         showToast('Não foi possível autenticar. Confira as credenciais ou aguarde.', 'danger'); return;
       }
       const membership=await _supabase.from('admin_users').select('role').eq('user_id',data.user.id).maybeSingle();
+      if(epoch!==sessionEpoch) return;
       if (membership.error || !membership.data) { if(!membership.error) startLoginRetryWait(); await _supabase.auth.signOut(); showToast('Não foi possível autenticar o administrador.', 'danger'); return; }
       try {
         const allowed=await checked(_supabase.rpc('is_admin'));
+        if(epoch!==sessionEpoch) return;
         if(allowed!==true) {startLoginRetryWait();throw new Error('Acesso não autorizado.');}
         if(fetching) await fetching;
         await fetchFromDatabase();
+        if(epoch!==sessionEpoch) return;
         if(!state.isAdminAuthenticated || connectionState!=='online') throw new Error('Serviço indisponível.');
         closeModal('modal-admin-auth'); openAdminPanel(); showToast('Administrador autenticado.');
       } catch (error) {
-        state.isAdminAuthenticated=false; state.players=[]; state.matches=[]; state.messages=[]; state.coupons=[];
+        if(epoch!==sessionEpoch) return;
+        invalidateSessionReads();
         renderAll(); await _supabase.auth.signOut({scope:'local'}); throw error;
       }
     }
 
     async function adminLogout() {
-      state.isAdminAuthenticated=false; state.players=[]; state.messages=[]; state.matches=[]; state.coupons=[];
-      sessionStorage.removeItem('nova_admin_auth_v2'); switchTab('view-home'); renderAll();
+      invalidateSessionReads();
+      switchTab('view-home'); renderAll();
+      // Auth needs the stored access token to revoke this server session.
+      // Removing it first silently turns signOut into local cleanup only.
       if (_supabase) { const {error}=await _supabase.auth.signOut({scope:'local'}); if (error) throw error; }
+      else sessionStorage.removeItem('nova_admin_auth_v2');
       await fetchFromDatabase(); showToast('Sessão ADM encerrada.');
     }
 
@@ -477,18 +510,97 @@
     }
 
     function switchAdminSubtab(sub, element) {
+      const sections=['players','matches','coupons','messages','finances'];
+      if(!state.isAdminAuthenticated || !sections.includes(sub)) return;
       document.querySelectorAll('.admin-tile').forEach(t => t.classList.remove('active'));
       element.classList.add('active');
+      for(const name of sections) document.getElementById('admin-sub-'+name).classList.toggle('hidden',name!==sub);
+      if(sub==='finances') return loadAdminFinances();
+    }
 
-      document.getElementById('admin-sub-players').classList.add('hidden');
-      document.getElementById('admin-sub-matches').classList.add('hidden');
-      document.getElementById('admin-sub-coupons').classList.add('hidden');
-      document.getElementById('admin-sub-messages').classList.add('hidden');
+    function financeCents(value) {
+      const match=/^(-?)([0-9]+)(?:\.([0-9]{1,2}))?$/.exec(String(value));
+      if(!match) throw new Error('Valor monetário inválido.');
+      const cents=BigInt(match[2])*100n+BigInt((match[3] || '').padEnd(2,'0'));
+      return match[1] ? -cents : cents;
+    }
 
-      if (sub === 'players') document.getElementById('admin-sub-players').classList.remove('hidden');
-      if (sub === 'matches') document.getElementById('admin-sub-matches').classList.remove('hidden');
-      if (sub === 'coupons') document.getElementById('admin-sub-coupons').classList.remove('hidden');
-      if (sub === 'messages') document.getElementById('admin-sub-messages').classList.remove('hidden');
+    function formatFinanceMoney(value) {
+      const cents=financeCents(value),absolute=cents<0n ? -cents : cents;
+      return `${cents<0n ? '-' : ''}R$\u00a0${new Intl.NumberFormat('pt-BR').format(absolute/100n)},${String(absolute%100n).padStart(2,'0')}`;
+    }
+
+    function validateFinanceSummary(data) {
+      if(!data || Array.isArray(data) || !Number.isInteger(data.version) || data.version<0 || !/^[0-9]+$/.test(String(data.participations))) throw new Error('Resposta inválida.');
+      for(const key of ['registration_fee','accumulated_total','payout_total','advertising_total','balance']) financeCents(data[key]);
+      return data;
+    }
+
+    function renderAdminFinances() {
+      const form=document.getElementById('form-ad-spend');
+      const input=document.getElementById('finance-ad-spend-input');
+      const status=document.getElementById('finance-status');
+      const fields={accumulated_total:'finance-accumulated',payout_total:'finance-payout',advertising_total:'finance-ad-spend',balance:'finance-balance'};
+      if(!state.isAdminAuthenticated){state.finances=null;financeLoadState='idle';financeDraftDirty=false;}
+      const data=state.isAdminAuthenticated ? state.finances : null;
+      for(const [key,id]of Object.entries(fields)) document.getElementById(id).textContent=data ? formatFinanceMoney(data[key]) : '—';
+      const balance=document.getElementById('finance-balance');
+      balance.classList.toggle('finance-negative',!!data && financeCents(data.balance)<0n);
+      balance.classList.toggle('finance-positive',!!data && financeCents(data.balance)>=0n);
+      const ready=!!data && financeLoadState==='ready';
+      input.disabled=!ready || actionLocks.has('handleSaveAdSpend');
+      form.querySelector('button[type="submit"]').disabled=input.disabled;
+      if(!data && !state.isAdminAuthenticated){input.value='';delete form.dataset.version;}
+      else if(data && !financeDraftDirty){input.value=data.advertising_total;form.dataset.version=String(data.version);}
+      status.textContent=!state.isAdminAuthenticated ? 'Entre no painel para consultar os valores.'
+        : financeLoadState==='error' ? 'Não foi possível carregar os ganhos. Tente atualizar.'
+        : financeLoadState==='loading' ? 'Atualizando os valores…'
+        : data ? `${new Intl.NumberFormat('pt-BR').format(BigInt(data.participations))} participações registradas × R$ 6,00. Valores calculados pelo histórico da liga.`
+        : 'Abra a aba para consultar os ganhos.';
+    }
+
+    async function loadAdminFinances(force=false) {
+      if(!state.isAdminAuthenticated || !_supabase) return;
+      if(financeFetching && !force) return financeFetching;
+      const epoch=sessionEpoch;
+      const readEpoch=++financeReadEpoch;
+      const request=(async()=>{
+        financeLoadState='loading';renderAdminFinances();
+        try{
+          const data=validateFinanceSummary(await checked(_supabase.rpc('get_admin_finances')));
+          if(epoch!==sessionEpoch || readEpoch!==financeReadEpoch || !state.isAdminAuthenticated) return;
+          state.finances=data;financeLoadState='ready';
+        }catch{
+          if(epoch!==sessionEpoch || readEpoch!==financeReadEpoch || !state.isAdminAuthenticated) return;
+          state.finances=null;financeLoadState='error';
+        }finally{if(epoch===sessionEpoch && readEpoch===financeReadEpoch) renderAdminFinances();}
+      })();
+      financeFetching=request;
+      try{return await request;}finally{if(financeFetching===request) financeFetching=null;}
+    }
+
+    async function handleSaveAdSpend() {
+      if(!state.isAdminAuthenticated || !state.finances || financeLoadState!=='ready') throw new Error('Acesso inválido.');
+      const raw=document.getElementById('finance-ad-spend-input').value;
+      const cents=financeCents(raw);
+      const version=Number(document.getElementById('form-ad-spend').dataset.version);
+      if(cents<0n || cents>100000000000n || !Number.isInteger(version) || version<0) throw new Error('Valor inválido.');
+      const epoch=sessionEpoch;
+      financeReadEpoch++;financeFetching=null;
+      try{
+        const data=validateFinanceSummary(await checked(_supabase.rpc('save_admin_ad_spend',{p_advertising_total:raw,p_expected_version:version})));
+        if(epoch!==sessionEpoch || !state.isAdminAuthenticated) return;
+        financeReadEpoch++;financeFetching=null;financeLoadState='ready';
+        state.finances=data;financeDraftDirty=false;renderAdminFinances();
+        showToast('Gasto com anúncios salvo. Saldo atualizado.');
+      }catch(error){
+        if(epoch!==sessionEpoch || !state.isAdminAuthenticated) return;
+        if(error?.code==='40001'){
+          financeDraftDirty=false;await loadAdminFinances(true);
+          showToast('Outro administrador alterou o gasto. Confira o valor atualizado antes de salvar.','danger');return;
+        }
+        throw error;
+      }
     }
 
     function openModal(id) {
@@ -524,11 +636,7 @@
       if (!safeId.test(gameId) || !nick || nick.length>80) throw new Error('Dados inválidos.');
       const newPlayer = {
         nick: nick,
-        gameId: gameId,
-        status: 'normal',
-        kills: 0,
-        matchesCount: 0,
-        earnings: 0.0
+        gameId: gameId
       };
 
       const { error } = await _supabase.from('jogadores').insert([newPlayer]);
@@ -579,11 +687,7 @@
 
           playersToInsert.push({
             nick: nick,
-            gameId: gameId,
-            status: 'normal',
-            kills: 0,
-            matchesCount: 0,
-            earnings: 0.0
+            gameId: gameId
           });
           addedCount++;
         }
@@ -1007,7 +1111,7 @@
 
     function maskGameId(gameId) {
       const str = String(gameId || '');
-      if (str.length <= 4) return str;
+      if (str.length <= 4) return '*'.repeat(str.length);
       return str.slice(0, 4) + '*'.repeat(str.length - 4);
     }
 
@@ -1189,6 +1293,8 @@
       if (!state.currentPlayer) {
         loggedOutView.classList.remove('hidden');
         loggedInView.classList.add('hidden');
+        for(const id of ['dash-player-nick','dash-player-id','dash-kills','dash-matches','dash-earnings','dash-rank']) document.getElementById(id).innerText='';
+        document.getElementById('home-matches-list').replaceChildren();
       } else {
         loggedOutView.classList.add('hidden');
         loggedInView.classList.remove('hidden');
@@ -1335,6 +1441,16 @@
       }
 
       // PAINEL ADM - MÉTRICAS
+      renderAdminFinances();
+      if(!state.isAdminAuthenticated) {
+        if(!document.getElementById('view-admin').classList.contains('hidden')) switchTab('view-home');
+        document.querySelectorAll('form[data-submit]').forEach(form=>{
+          if(!adminActions.has(form.dataset.submit)) return;
+          form.reset();
+          const modal=form.closest('.modal-overlay');if(modal?.classList.contains('active')) closeModal(modal.id);
+        });
+        document.querySelectorAll('#match-players-container, #edit-match-players-container').forEach(el=>el.replaceChildren());
+      }
       const allMatchGroups = getGroupedMatches();
       const totalEarnings = state.players.reduce((acc, p) => acc + parseFloat(p.earnings || 0), 0);
       document.getElementById('admin-count-players').innerText = state.players.length;
@@ -1459,9 +1575,10 @@
       handleAdminAuth:()=>handleAdminAuth(), handleAddPlayer:()=>handleAddPlayer(),
       handleBulkPlayersImport:()=>handleBulkPlayersImport(), handleAddMatch:()=>handleAddMatch(),
       handleEditMatch:()=>handleEditMatch(), handleBulkImport:()=>handleBulkImport(),
-      handleAddCoupon:()=>handleAddCoupon()
+      handleAddCoupon:()=>handleAddCoupon(),
+      loadAdminFinances:()=>loadAdminFinances(true),handleSaveAdSpend:()=>handleSaveAdSpend()
     };
-    const adminActions=new Set(['switchAdminSubtab','openAddMatchModal','addPlayerRowToMatch','removePlayerRow','openEditMatchModal','deleteMatchGroup','updatePlayerStatus','toggleMedalFlag','deleteCoupon','deleteMessage','handleSendMessage','handleAddPlayer','handleBulkPlayersImport','handleAddMatch','handleEditMatch','handleBulkImport','handleAddCoupon']);
+    const adminActions=new Set(['switchAdminSubtab','openAddMatchModal','addPlayerRowToMatch','removePlayerRow','openEditMatchModal','deleteMatchGroup','updatePlayerStatus','toggleMedalFlag','deleteCoupon','deleteMessage','handleSendMessage','handleAddPlayer','handleBulkPlayersImport','handleAddMatch','handleEditMatch','handleBulkImport','handleAddCoupon','loadAdminFinances','handleSaveAdSpend']);
 
     async function dispatchAction(event,type) {
       const el=event.target.closest('[data-'+type+']'); if(!el) return;
@@ -1483,6 +1600,7 @@
     document.addEventListener('click',event=>{lastInteraction=Date.now(); void dispatchAction(event,'click');});
     document.addEventListener('submit',event=>{lastInteraction=Date.now(); void dispatchAction(event,'submit');});
     document.addEventListener('change',event=>{lastInteraction=Date.now(); void dispatchAction(event,'change');});
+    document.getElementById('finance-ad-spend-input').addEventListener('input',()=>{lastInteraction=Date.now();financeDraftDirty=true;});
     document.addEventListener('invalid',event=>{
       const form=event.target.closest('form');
       if(form && loginActions.has(form.dataset.submit)) startLoginRetryWait();
@@ -1516,7 +1634,7 @@
       else {const notice=document.createElement('p');notice.textContent='Para suporte, procure a organização pelo canal oficial da liga.';support.after(notice);}
       if(_supabase){
         _supabase.auth.onAuthStateChange(event=>{
-          if(event==='SIGNED_OUT'){state.isAdminAuthenticated=false;state.players=[];state.matches=[];state.messages=[];switchTab('view-home');renderAll();}
+          if(event==='SIGNED_OUT'){invalidateSessionReads();switchTab('view-home');renderAll();}
           if(['SIGNED_OUT','TOKEN_REFRESHED'].includes(event)) setTimeout(()=>{void fetchFromDatabase();},0);
         });
       }

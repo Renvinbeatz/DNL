@@ -188,3 +188,191 @@ test('Vercel headers prevent framing, sniffing, referrer leakage and mixed conte
  const config=JSON.parse(fs.readFileSync('vercel.json','utf8'));const headers=Object.fromEntries(config.headers[0].headers.map(h=>[h.key,h.value]));
  assert.equal(headers['X-Frame-Options'],'DENY');assert.equal(headers['X-Content-Type-Options'],'nosniff');assert.equal(headers['Referrer-Policy'],'no-referrer');assert.match(headers['Content-Security-Policy'],/frame-ancestors 'none'/);assert.match(headers['Strict-Transport-Security'],/max-age=31536000/);
 });
+
+test('A delayed admin authorization response cannot restore access after logout',async()=>{
+ let release,calls=0;
+ const a=app({rpc:async name=>name==='is_admin' && ++calls===1 ? new Promise(r=>{release=r}) : {data:name==='is_admin'?false:[],error:null},
+  from:()=>({select(){return this},order(){return this},range:async()=>({data:[],error:null})})});
+ const reading=a.run('fetchFromDatabase()');const leaving=a.run('adminLogout()');
+ release({data:true,error:null});await Promise.all([reading,leaving]);
+ assert.equal(a.run('state.isAdminAuthenticated'),false);a.dom.window.close();
+});
+
+test('A delayed player message response is discarded after logout',async()=>{
+ let release,entered;const waiting=new Promise(r=>{entered=r});
+ const a=app({rpc:async name=>{
+  if(name==='player_session_login')return {data:[{id:'11111111-1111-4111-8111-111111111111',nick:'QA',gameId:'99999001',status:'normal',kills:0,earnings:0}],error:null};
+  if(name==='get_my_messages'){entered();return new Promise(r=>{release=r})}
+  return {data:name==='is_admin'?false:[],error:null};
+ },from:()=>({select(){return this},order(){return this},range:async()=>({data:[],error:null})})});
+ a.run(`playerToken='${'a'.repeat(64)}'`);
+ const reading=a.run('fetchFromDatabase()');await waiting;const leaving=a.run('playerLogout()');
+ release({data:[{id:'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',recipientId:'all',text:'PRIVATE_QA_MESSAGE',readBy:[]}],error:null});
+ await Promise.all([reading,leaving]);assert.equal(a.run('state.messages.length'),0);assert.equal(a.run('state.currentPlayer'),null);
+ assert.doesNotMatch(a.w.document.body.textContent,/PRIVATE_QA_MESSAGE/);a.dom.window.close();
+});
+
+test('Logout removes private dashboard values and unfinished admin forms from the DOM',()=>{
+ const a=app();a.run(`state.isAdminAuthenticated=true;state.currentPlayer={id:'11111111-1111-4111-8111-111111111111',nick:'PRIVATE_QA_NICK',gameId:'99999001',kills:0,earnings:0};state.players=[state.currentPlayer];renderAll();openAddMatchModal();state.isAdminAuthenticated=false;state.currentPlayer=null;state.players=[];renderAll()`);
+ assert.notEqual(a.w.document.getElementById('dash-player-id').innerText,'99999001');
+ assert.doesNotMatch(a.w.document.body.textContent,/PRIVATE_QA_NICK/);a.dom.window.close();
+});
+
+test('Stored XSS payloads remain text across rankings, messages, matches, coupons and editor options',()=>{
+ const payloads=['<img src=x onerror="window.PWNED=1">','</option><svg onload="window.PWNED=1">',
+  '\" autofocus onfocus=window.PWNED=1 x=\"',"'><iframe srcdoc='<script>window.PWNED=1</script>'>",
+  '<a href="javascript:window.PWNED=1">click</a>','<form id="actions"><input name="handleAdminAuth"></form>',
+  '${window.PWNED=1}', '<style>body{display:none}</style>'];
+ for(const payload of payloads){
+  const a=app();a.w.payload=payload;
+  a.run(`
+   const qa={id:'11111111-1111-4111-8111-111111111111',nick:window.payload,gameId:'99999001',status:'normal',kills:1,matchesCount:1,earnings:1};
+   state.isAdminAuthenticated=true;state.currentPlayer=qa;state.players=[qa];
+   state.matches=[{id:'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',number:window.payload,date:window.payload,playerId:qa.id,playerNick:window.payload,playerGameId:qa.gameId,kills:1,pos:1,total:1}];
+   state.messages=[{id:'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',recipientId:'all',text:window.payload,date:window.payload,readBy:[]}];
+   state.coupons=[{id:'cccccccc-cccc-4ccc-8ccc-cccccccccccc',code:'SAFE_QA',discount:window.payload,valid:window.payload}];
+   renderAll();switchRankingType('booyahs');openAddMatchModal();openEditMatchModal(getGroupedMatches()[0].key);
+  `);
+  assert.equal(a.w.document.querySelector('[onerror],[onload],[onfocus],iframe,[href^="javascript:"],form#actions,style'),null);
+  assert.equal(a.w.document.querySelector('#profile-content').textContent.includes(payload),true);
+  assert.equal(a.w.document.querySelector('#ranking-list-container').textContent.includes(payload),true);
+  assert.equal(a.w.PWNED,undefined);a.dom.window.close();
+ }
+});
+
+test('All accepted ID lengths are masked unless explicitly rendering the logged-in player',()=>{
+ const a=app();for(const id of ['123','1234','12345','12345678901234567890'])assert.match(a.w.maskGameId(id),/\*/);
+ assert.equal(a.w.maskGameId('1234****'),'1234****');a.dom.window.close();
+});
+
+test('Player creation sends only nickname and ID; protected balances come from database defaults',async()=>{
+ const inserted=[];const a=app({from:()=>({insert:async rows=>{inserted.push(...rows);return {error:null}}})});
+ a.run(`fetchFromDatabase=async()=>{};state.isAdminAuthenticated=true;document.getElementById('new-player-nick').value='QA';document.getElementById('new-player-id').value='88888001'`);
+ await a.run('handleAddPlayer()');
+ a.run(`document.getElementById('bulk-players-input').value='88888002, QA2'`);await a.run('handleBulkPlayersImport()');
+ assert.equal(inserted.length,2);for(const row of inserted)assert.deepEqual(Object.keys(row).sort(),['gameId','nick']);a.dom.window.close();
+});
+
+test('Admin logout sends the existing session to Auth before removing its local credential',async()=>{
+ const {GoTrueClient}=require('@supabase/auth-js');let auth;const requests=[];
+ const a=app({auth:{signOut:options=>auth.signOut(options)},from:()=>({select(){return this},order(){return this},range:async()=>({data:[],error:null})})},w=>{
+  const exp=Math.floor(Date.now()/1000)+3600;
+  const access_token=[{alg:'HS256',typ:'JWT'},{exp,sub:'dddddddd-dddd-4ddd-8ddd-dddddddddddd',role:'authenticated'}].map(x=>Buffer.from(JSON.stringify(x)).toString('base64url')).join('.')+'.synthetic';
+  w.sessionStorage.setItem('nova_admin_auth_v2',JSON.stringify({access_token,refresh_token:'synthetic-refresh',expires_at:exp,user:{id:'dddddddd-dddd-4ddd-8ddd-dddddddddddd'}}));
+  auth=new GoTrueClient({url:'https://auth.example.test',storage:w.sessionStorage,storageKey:'nova_admin_auth_v2',persistSession:true,autoRefreshToken:false,detectSessionInUrl:false,
+   fetch:async(url,options)=>{requests.push({url,authorized:!!options.headers.Authorization});return new Response('{}',{status:200,headers:{'Content-Type':'application/json'}})}});
+ });
+ try{
+  await auth.initialize();await a.run('adminLogout()');
+  assert.ok(requests.some(r=>r.url==='https://auth.example.test/logout?scope=local' && r.authorized));
+  assert.equal(a.w.sessionStorage.getItem('nova_admin_auth_v2'),null);
+ }finally{await auth.dispose();a.dom.window.close();}
+});
+
+test('A failed refresh clears both privileged authorization and private player data',async()=>{
+ const a=app({rpc:async()=>({data:true,error:null}),from:()=>({select(){return this},order(){return this},range:async()=>({data:null,error:{message:'Unavailable'}})})});
+ a.run(`state.isAdminAuthenticated=true;state.currentPlayer={id:'private'};state.messages=[{text:'PRIVATE_QA'}]`);
+ await a.run('fetchFromDatabase()');assert.equal(a.run('state.isAdminAuthenticated'),false);assert.equal(a.run('state.currentPlayer'),null);assert.equal(a.run('state.messages.length'),0);
+ assert.equal(a.w.document.getElementById('conn-status-badge').textContent,'SEM CONEXÃO');a.dom.window.close();
+});
+
+function financeData(overrides={}) {
+ return {participations:'2',registration_fee:'6.00',accumulated_total:'12.00',payout_total:'5.50',advertising_total:'0.00',balance:'6.50',version:0,...overrides};
+}
+
+test('Admin gains tab loads its four currency totals and hides the other admin sections',async()=>{
+ const a=app({rpc:async()=>({data:financeData(),error:null})});a.run('state.isAdminAuthenticated=true');
+ await a.run(`switchAdminSubtab('finances',document.querySelector('.admin-tile[data-arg="finances"]'))`);
+ assert.equal(a.w.document.getElementById('admin-sub-finances').classList.contains('hidden'),false);
+ for(const name of ['players','matches','coupons','messages'])assert.equal(a.w.document.getElementById('admin-sub-'+name).classList.contains('hidden'),true);
+ for(const [id,value]of Object.entries({'finance-accumulated':'12,00','finance-payout':'5,50','finance-ad-spend':'0,00','finance-balance':'6,50'}))assert.ok(a.w.document.getElementById(id).textContent.includes(value));
+ assert.equal(a.w.document.getElementById('finance-ad-spend-input').disabled,false);
+ assert.match(a.w.document.getElementById('finance-status').textContent,/2 participações/);a.dom.window.close();
+});
+
+test('Financial amounts retain cents, format large totals exactly and display a negative balance',async()=>{
+ const a=app({rpc:async()=>({data:financeData({payout_total:'12.50',advertising_total:'4.00',balance:'-4.50'}),error:null})});
+ a.run('state.isAdminAuthenticated=true');await a.run('loadAdminFinances()');
+ assert.equal(a.w.document.getElementById('finance-balance').textContent,'-R$\u00a04,50');
+ assert.equal(a.w.document.getElementById('finance-balance').classList.contains('finance-negative'),true);
+ assert.equal(a.w.formatFinanceMoney('12345678901234567890.05'),'R$\u00a012.345.678.901.234.567.890,05');a.dom.window.close();
+});
+
+test('Saving advertising expense waits for the database, prevents duplicate submits and updates the balance',async()=>{
+ let release,calls=0,submitted;
+ const a=app({rpc:async(name,args)=>{
+  if(name==='save_admin_ad_spend'){calls++;submitted=args;return new Promise(r=>{release=r})}
+  return {data:financeData(),error:null};
+ }});a.run('state.isAdminAuthenticated=true');await a.run('loadAdminFinances()');
+ const input=a.w.document.getElementById('finance-ad-spend-input');input.value='3.25';input.dispatchEvent(new a.w.Event('input'));
+ const form=a.w.document.getElementById('form-ad-spend'),event={target:form,preventDefault(){},stopPropagation(){}};
+ const saving=a.w.dispatchAction(event,'submit');await a.w.dispatchAction(event,'submit');
+ assert.equal(calls,1);assert.equal(input.disabled,true);assert.match(a.w.document.getElementById('finance-ad-spend').textContent,/0,00/);
+ release({data:financeData({advertising_total:'3.25',balance:'3.25',version:1}),error:null});await saving;
+ assert.equal(submitted.p_advertising_total,'3.25');assert.equal(submitted.p_expected_version,0);
+ assert.match(a.w.document.getElementById('finance-ad-spend').textContent,/3,25/);assert.match(a.w.document.getElementById('finance-balance').textContent,/3,25/);
+ assert.equal(input.disabled,false);assert.equal(form.querySelector('button').disabled,false);a.dom.window.close();
+});
+
+test('Failed financial reads show no fabricated zeroes and do not revoke the administrator session',async()=>{
+ const a=app({rpc:async()=>({data:null,error:{code:'PGRST202'}})});a.run('state.isAdminAuthenticated=true');await a.run('loadAdminFinances()');
+ assert.equal(a.run('state.isAdminAuthenticated'),true);assert.equal(a.run('state.finances'),null);
+ for(const id of ['finance-accumulated','finance-payout','finance-ad-spend','finance-balance'])assert.equal(a.w.document.getElementById(id).textContent,'—');
+ assert.equal(a.w.document.getElementById('finance-ad-spend-input').disabled,true);assert.match(a.w.document.getElementById('finance-status').textContent,/Não foi possível/);a.dom.window.close();
+});
+
+test('Refreshing the active gains tab updates automatic totals without discarding an unsaved expense',async()=>{
+ let data=financeData();const a=app({rpc:async name=>({data:name==='is_admin'?true:name==='get_admin_finances'?data:[],error:null}),from:()=>({select(){return this},order(){return this},range:async()=>({data:[],error:null})})});
+ a.run('state.isAdminAuthenticated=true');await a.run(`switchAdminSubtab('finances',document.querySelector('.admin-tile[data-arg="finances"]'))`);
+ const input=a.w.document.getElementById('finance-ad-spend-input');input.value='1.25';input.dispatchEvent(new a.w.Event('input'));
+ data=financeData({participations:'3',accumulated_total:'18.00',balance:'12.50'});
+ await a.run('fetchFromDatabase()');assert.match(a.w.document.getElementById('finance-accumulated').textContent,/18,00/);assert.equal(input.value,'1.25');a.dom.window.close();
+});
+
+test('A conflicting expense update is rejected and reloads the other administrator’s saved value',async()=>{
+ let data=financeData(),captured;
+ const a=app({rpc:async(name,args)=>{
+  if(name==='save_admin_ad_spend'){captured=args;return {data:null,error:{code:'40001'}}}
+  return {data,error:null};
+ }});a.run('state.isAdminAuthenticated=true');await a.run('loadAdminFinances()');
+ const input=a.w.document.getElementById('finance-ad-spend-input');input.value='7.25';input.dispatchEvent(new a.w.Event('input'));
+ data=financeData({advertising_total:'5.00',balance:'1.50',version:1});await a.run('loadAdminFinances()');assert.equal(input.value,'7.25');
+ await a.run('handleSaveAdSpend()');assert.equal(captured.p_expected_version,0);assert.equal(input.value,'5.00');
+ assert.match(a.w.document.getElementById('toast-container').textContent,/Outro administrador/);a.dom.window.close();
+});
+
+test('Invalid advertising amounts never reach the API',async()=>{
+ let saves=0;const a=app({rpc:async name=>{if(name==='save_admin_ad_spend')saves++;return {data:financeData(),error:null}}});
+ a.run('state.isAdminAuthenticated=true');await a.run('loadAdminFinances()');
+ for(const value of ['', '-1', '0.001', '1000000001']){
+  a.w.document.getElementById('finance-ad-spend-input').value=value;await assert.rejects(a.run('handleSaveAdSpend()'));
+ }
+ assert.equal(saves,0);a.dom.window.close();
+});
+
+test('Financial reads completing after logout cannot restore private totals or inputs',async()=>{
+ let release;const a=app({rpc:async name=>name==='get_admin_finances'?new Promise(r=>{release=r}):{data:name==='is_admin'?false:[],error:null},from:()=>({select(){return this},order(){return this},range:async()=>({data:[],error:null})})});
+ a.run('state.isAdminAuthenticated=true');const reading=a.run('loadAdminFinances()');const leaving=a.run('adminLogout()');
+ release({data:financeData(),error:null});await Promise.all([reading,leaving]);
+ assert.equal(a.run('state.finances'),null);assert.equal(a.w.document.getElementById('finance-balance').textContent,'—');assert.equal(a.w.document.getElementById('finance-ad-spend-input').value,'');a.dom.window.close();
+});
+
+test('The gains action is blocked for visitors even if they enable the form through the DOM',async()=>{
+ let calls=0;const a=app({rpc:async()=>{calls++;return {data:financeData(),error:null}}});
+ const form=a.w.document.getElementById('form-ad-spend');form.querySelectorAll('input,button').forEach(el=>{el.disabled=false});
+ await a.w.dispatchAction({target:form,preventDefault(){},stopPropagation(){}},'submit');assert.equal(calls,0);a.dom.window.close();
+});
+
+test('A financial read started during a save cannot overwrite the successful saved expense',async()=>{
+ let releaseSave,releaseRead,calls=0;
+ const a=app({rpc:async name=>{
+  if(name==='save_admin_ad_spend')return new Promise(r=>{releaseSave=r});
+  if(++calls===1)return {data:financeData(),error:null};
+  return new Promise(r=>{releaseRead=r});
+ }});a.run('state.isAdminAuthenticated=true');await a.run('loadAdminFinances()');
+ a.w.document.getElementById('finance-ad-spend-input').value='3.25';
+ const saving=a.run('handleSaveAdSpend()');const reading=a.run('loadAdminFinances(true)');
+ releaseSave({data:financeData({advertising_total:'3.25',balance:'3.25',version:1}),error:null});await saving;
+ releaseRead({data:financeData(),error:null});await reading;
+ assert.equal(a.run('state.finances.advertising_total'),'3.25');assert.match(a.w.document.getElementById('finance-balance').textContent,/3,25/);assert.equal(a.w.document.getElementById('finance-ad-spend-input').disabled,false);a.dom.window.close();
+});

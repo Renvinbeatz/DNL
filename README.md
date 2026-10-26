@@ -4,13 +4,27 @@ Site estático com Supabase para cadastros, resultados, cupons e comunicados. Jo
 
 ## Estado da segurança
 
-A alteração de 21/10/2026 que remove a exigência de duas etapas está preparada localmente para implantação manual, conforme solicitado. Nenhuma escrita remota ou publicação foi realizada nesta alteração. A última conferência das conexões, em 10/10, encontrou erros no Supabase e na Vercel; a situação da produção não foi revalidada após eventuais aplicações manuais. O relatório está em `security/RELATORIO-SEGURANCA.md`.
+A auditoria de 26/10/2026 confirmou as proteções anteriores no Supabase e os cabeçalhos no site publicado. As novas correções de logout, dados residuais, permissões de escrita e máscara de IDs estão preparadas localmente; nenhuma escrita remota ou publicação foi realizada nesta auditoria. O relatório atual está em `security/AUDITORIA-2026-10-26.md`; o relatório anterior foi preservado em `security/RELATORIO-SEGURANCA.md`.
+
+## Ganhos da liga
+
+A nova aba **Ganhos** do painel mostra acumulado automático de **R$ 6,00 por participação**, o mesmo total de premiações do painel, gasto total com anúncios informado manualmente e saldo final automático. Os anúncios ficam salvos no Supabase e o saldo pode ser negativo. Os cálculos incluem todo o histórico registrado, inclusive jogadores bloqueados.
+
+Para ativar, gerar `supabase/enable-admin-finances.sql` com `npm run package:finances`, aplicar esse arquivo uma única vez no banco com as proteções 01–07 e publicar o frontend atualizado. Essa funcionalidade possui migração própria; não reaplicar o pacote completo de segurança. Fórmulas, permissões e instruções estão em [supabase/GANHOS.md](supabase/GANHOS.md). A aplicação e publicação continuam manuais.
+
+## Aplicar as correções da auditoria de 26/10/2026
+
+Publicar primeiro o frontend atualizado, com instalação pelo lockfile e build em `dist`. Depois, no projeto que já recebeu as migrações 01–07, executar **somente `security/audit-fixes-2026-10-26.sql`** no SQL Editor, após conferir backup. A migração 08 restringe escritas diretas de partidas/totais e corrige a máscara de IDs curtos; não altera os dados existentes. O novo frontend cadastra jogadores enviando apenas nick e ID, deixando os valores iniciais para o banco.
+
+O banco passa a exigir as funções administrativas para alterar partidas e atualizar os totais juntos. Status e medalhas continuam editáveis no painel. O logout agora solicita a revogação antes da limpeza da credencial, descarta respostas antigas e remove os dados privados do navegador. A dependência de testes Undici foi atualizada no lockfile.
+
+Ainda é necessário revisar manualmente o cadastro público de contas Auth, proteção contra senhas vazadas e os limites reais de autenticação. O contador de 15 segundos continua sendo uma proteção da interface, contornável pela API. O acesso por ID e a administração sem segundo fator foram preservados conforme solicitado. Não reaplicar o pacote completo em produção; o relatório detalha a ordem e os testes após publicar.
 
 ## Atualizar um site que já recebeu as seis migrações anteriores
 
 Executar **somente** `security/remove-admin-mfa.sql` no SQL Editor do projeto correto e publicar o novo frontend, com `app.js` e `index.html` atualizados. Esse arquivo contém a migração `20261021044448_security_hardening_07.sql`: retira a exigência de `aal2`, preservando associação administrativa, revogação e validade máxima da sessão. É possível executar a atualização incremental novamente sem duplicar dados.
 
-Não reaplicar o pacote completo em um banco que já recebeu as seis migrações. Se o pacote anterior ainda não foi aplicado, usar a instalação completa abaixo: `security/apply-security.sql` já inclui todas as sete migrações e termina com acesso administrativo sem segundo fator. Os dois pacotes são gerados por `npm run package:security`.
+Não reaplicar o pacote completo em um banco que já recebeu as seis migrações. Se o pacote anterior ainda não foi aplicado, usar a instalação completa abaixo: `security/apply-security.sql` já inclui todas as oito migrações e mantém acesso administrativo sem segundo fator. Os três pacotes são gerados por `npm run package:security`. Após aplicar somente a remoção de MFA, também aplicar a atualização incremental 08 indicada acima.
 
 A alteração não apaga fatores já cadastrados na conta Supabase: o painel deixa de solicitá-los e de exigir o segundo fator nas permissões do banco. A validação de e-mail/senha continua obrigatória.
 
@@ -38,7 +52,7 @@ O site local fica em `http://127.0.0.1:4173`. O servidor só entrega os sete arq
 1. Confirmar o projeto Supabase `aqvyehkrbjttvdirtjzd` e criar/conferir backup recuperável antes da migração. Essas migrações dependem do esquema auditado e não são um instalador para banco vazio.
 2. Fazer a aplicação em janela de manutenção. O frontend antigo usa permissões/assinaturas que serão removidas; publicar somente um dos lados interrompe fluxos. A migração invalida tokens antigos, exigindo novo acesso dos jogadores por ID.
 3. Gerar `security/apply-security.sql` com `npm run package:security`. Abrir o SQL Editor do projeto correto com uma conta autorizada e executar o arquivo completo uma única vez. Ele contém `BEGIN`/`COMMIT`; em caso de erro, a transação não deve ser tratada como aplicação parcial bem-sucedida. Não reaplicar o pacote após sucesso.
-4. Alternativamente, usar Supabase CLI autenticada e aplicar as sete migrações em ordem. Escolher esse caminho **ou** o pacote manual: não executar os dois. O SQL Editor não registra automaticamente as versões no histórico do CLI; antes de adotar CLI depois de uma aplicação manual, reconciliar esse histórico. Nunca marcar migrações como aplicadas sem verificar seu efeito.
+4. Alternativamente, usar Supabase CLI autenticada e aplicar as oito migrações em ordem. Escolher esse caminho **ou** o pacote manual: não executar os dois. O SQL Editor não registra automaticamente as versões no histórico do CLI; antes de adotar CLI depois de uma aplicação manual, reconciliar esse histórico. Nunca marcar migrações como aplicadas sem verificar seu efeito.
 5. No Supabase, conferir que `nova_private` não está entre os esquemas expostos pela Data API. Não adicionar concessões públicas ou políticas `USING (true)` a mensagens, sessões ou jogadores para contornar erros de login.
 6. Confirmar a conta administrativa existente em Supabase Auth e sua linha em `public.admin_users`. Não criar associação administrativa com base em metadados editáveis pelo usuário. Configurar proteção de senhas, limites de Auth, recuperação de conta e cadastro público de contas conforme a operação da organização.
 7. Na Vercel, usar o projeto `novaleague` da equipe autorizada. Publicar este repositório com `npm run build` e saída `dist`; `vercel.json` contém essas definições e os cabeçalhos. Não publicar a raiz como pasta estática. Instalação com `npm ci --ignore-scripts` é compatível com o build, evitando scripts de instalação desnecessários.

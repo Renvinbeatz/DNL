@@ -5,6 +5,7 @@
   "scripts": {
     "build": "node scripts/build.mjs",
     "package:security": "node scripts/package-migrations.mjs",
+    "package:finances": "node scripts/package-finances.mjs",
     "test": "node --test tests/*.test.cjs",
     "audit:dependencies": "npm audit --audit-level=moderate",
     "serve": "node scripts/serve.mjs"

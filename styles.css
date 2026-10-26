@@ -314,7 +314,7 @@
       border: none; width: 22px; height: 22px; border-radius: 50%; cursor: pointer; font-size: 11px;
     }
 
-    .admin-menu-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 14px; }
+    .admin-menu-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; margin-bottom: 14px; }
     .admin-tile {
       background: rgba(229, 184, 57, 0.06); backdrop-filter: blur(8px);
       border: 1px solid var(--border-color); padding: 8px 4px;
@@ -405,6 +405,21 @@
 .login-wait progress::-moz-progress-bar { background: #e5b839; border-radius: 99px; }
 button[data-login-label]:disabled { cursor: not-allowed; opacity: .65; }
 [aria-busy="true"] { opacity: .65; }
+.finance-title { font-family: var(--font-sub); color: var(--neon-gold); }
+.finance-heading { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.finance-description { margin: 6px 0 12px; color: var(--text-muted); font-size: 12px; line-height: 1.5; }
+.finance-status { color: var(--text-muted); font-size: 12px; line-height: 1.5; margin-bottom: 12px; }
+.finance-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-bottom: 18px; }
+.finance-grid .stat-card { min-width: 0; }
+.finance-grid .stat-label { line-height: 1.6; }
+.finance-grid .stat-val { overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.finance-mode { display: inline-block; padding: 0 4px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 8px; color: var(--text-muted); }
+.finance-balance-card { background: rgba(248,215,117,.08); }
+.finance-note { color: var(--text-muted); font-size: 11px; line-height: 1.5; margin-top: 6px; }
+.finance-negative { color: var(--neon-red); }
+.finance-positive { color: var(--neon-green); }
+.finance-form { padding-top: 16px; border-top: 1px solid var(--border-color); }
+@media (max-width: 360px) { .finance-grid { grid-template-columns: 1fr; } }
 .modal-overlay:not(.active) { visibility: hidden; }
 .bottom-nav { padding-bottom: env(safe-area-inset-bottom); height: calc(60px + env(safe-area-inset-bottom)); }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; } }

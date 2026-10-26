@@ -1,0 +1,383 @@
+{
+  "date": "2026-10-26",
+  "project": "aqvyehkrbjttvdirtjzd",
+  "mode": "read-only, before local migration 08; no production writes",
+  "counts": {
+    "matches": 130,
+    "players": 101,
+    "messages": 0,
+    "sessions": 3
+  },
+  "grants": [
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "partidas",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT",
+      "with_hierarchy": "NO"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "partidas",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT",
+      "with_hierarchy": "YES"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "partidas",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE",
+      "with_hierarchy": "NO"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "partidas",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "DELETE",
+      "with_hierarchy": "NO"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "admin_users",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT",
+      "with_hierarchy": "YES"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "jogadores",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT",
+      "with_hierarchy": "NO"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "jogadores",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT",
+      "with_hierarchy": "YES"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "jogadores",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE",
+      "with_hierarchy": "NO"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "jogadores",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "DELETE",
+      "with_hierarchy": "NO"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "cupons",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT",
+      "with_hierarchy": "NO"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "cupons",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT",
+      "with_hierarchy": "YES"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "cupons",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE",
+      "with_hierarchy": "NO"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "cupons",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "DELETE",
+      "with_hierarchy": "NO"
+    },
+    {
+      "grantee": "anon",
+      "grantor": "postgres",
+      "table_name": "cupons",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT",
+      "with_hierarchy": "YES"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "mensagens",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "INSERT",
+      "with_hierarchy": "NO"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "mensagens",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "SELECT",
+      "with_hierarchy": "YES"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "mensagens",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "UPDATE",
+      "with_hierarchy": "NO"
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "table_name": "mensagens",
+      "is_grantable": "NO",
+      "table_schema": "public",
+      "table_catalog": "postgres",
+      "privilege_type": "DELETE",
+      "with_hierarchy": "NO"
+    }
+  ],
+  "tables": [
+    {
+      "rls": true,
+      "name": "rate_limits",
+      "schema": "nova_private"
+    },
+    {
+      "rls": true,
+      "name": "audit_log",
+      "schema": "nova_private"
+    },
+    {
+      "rls": true,
+      "name": "partidas",
+      "schema": "public"
+    },
+    {
+      "rls": true,
+      "name": "player_sessions",
+      "schema": "public"
+    },
+    {
+      "rls": true,
+      "name": "admin_users",
+      "schema": "public"
+    },
+    {
+      "rls": true,
+      "name": "jogadores",
+      "schema": "public"
+    },
+    {
+      "rls": true,
+      "name": "cupons",
+      "schema": "public"
+    },
+    {
+      "rls": true,
+      "name": "mensagens",
+      "schema": "public"
+    }
+  ],
+  "buckets": [],
+  "policies": [
+    {
+      "cmd": "SELECT",
+      "qual": "((user_id = ( SELECT auth.uid() AS uid)) AND nova_private.admin_session_valid())",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "admin_users",
+      "permissive": "PERMISSIVE",
+      "policyname": "admin_membership_read",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "ALL",
+      "qual": "( SELECT is_admin() AS is_admin)",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "jogadores",
+      "permissive": "PERMISSIVE",
+      "policyname": "admin_players",
+      "schemaname": "public",
+      "with_check": "( SELECT is_admin() AS is_admin)"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "( SELECT is_admin() AS is_admin)",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "partidas",
+      "permissive": "PERMISSIVE",
+      "policyname": "admin_matches",
+      "schemaname": "public",
+      "with_check": "( SELECT is_admin() AS is_admin)"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "( SELECT is_admin() AS is_admin)",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "mensagens",
+      "permissive": "PERMISSIVE",
+      "policyname": "admin_messages",
+      "schemaname": "public",
+      "with_check": "( SELECT is_admin() AS is_admin)"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "( SELECT is_admin() AS is_admin)",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "cupons",
+      "permissive": "PERMISSIVE",
+      "policyname": "admin_coupons",
+      "schemaname": "public",
+      "with_check": "( SELECT is_admin() AS is_admin)"
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "true",
+      "roles": [
+        "anon",
+        "authenticated"
+      ],
+      "tablename": "cupons",
+      "permissive": "PERMISSIVE",
+      "policyname": "public_coupons",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "ALL",
+      "qual": "false",
+      "roles": [
+        "anon",
+        "authenticated"
+      ],
+      "tablename": "player_sessions",
+      "permissive": "PERMISSIVE",
+      "policyname": "no_direct_player_sessions",
+      "schemaname": "public",
+      "with_check": "false"
+    }
+  ],
+  "admin_check": "CREATE OR REPLACE FUNCTION nova_private.is_admin()\n RETURNS boolean\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO ''\nAS $function$\r\n  SELECT nova_private.admin_session_valid()\r\n    AND EXISTS(SELECT 1 FROM public.admin_users WHERE user_id=auth.uid() AND role='admin')\r\n$function$\n",
+  "legacy_idor": null,
+  "advisors": {
+    "lints": [
+      {
+        "name": "rls_enabled_no_policy",
+        "title": "RLS Enabled No Policy",
+        "level": "INFO",
+        "facing": "EXTERNAL",
+        "categories": [
+          "SECURITY"
+        ],
+        "description": "Detects cases where row level security (RLS) has been enabled on a table but no RLS policies have been created.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy",
+        "count": 2,
+        "findings": [
+          {
+            "detail": "Table \\`nova_private.audit_log\\` has RLS enabled, but no policies exist",
+            "metadata": {
+              "name": "audit_log",
+              "type": "table",
+              "schema": "nova_private"
+            },
+            "observed_at": "2026-10-26T08:04:49.855Z"
+          },
+          {
+            "detail": "Table \\`nova_private.rate_limits\\` has RLS enabled, but no policies exist",
+            "metadata": {
+              "name": "rate_limits",
+              "type": "table",
+              "schema": "nova_private"
+            },
+            "observed_at": "2026-10-26T08:04:49.855Z"
+          }
+        ]
+      },
+      {
+        "name": "auth_leaked_password_protection",
+        "title": "Leaked Password Protection Disabled",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "SECURITY"
+        ],
+        "description": "Leaked password protection is currently disabled.",
+        "remediation": "https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection",
+        "count": 1,
+        "findings": [
+          {
+            "detail": "Supabase Auth prevents the use of compromised passwords by checking against HaveIBeenPwned.org. Enable this feature to enhance security.",
+            "metadata": {
+              "type": "auth",
+              "entity": "Auth"
+            }
+          }
+        ]
+      }
+    ]
+  }
+}
