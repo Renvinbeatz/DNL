@@ -277,7 +277,7 @@ test('A failed refresh clears both privileged authorization and private player d
 });
 
 function financeData(overrides={}) {
- return {participations:'2',registration_fee:'6.00',accumulated_total:'12.00',payout_total:'5.50',advertising_total:'0.00',balance:'6.50',version:0,...overrides};
+ return {participations:'2',registration_fee:'6.00',accumulated_total:'12.00',payout_total:'5.50',advertising_total:'0.00',balance:'6.50',version:0,non_participants:'0',non_participant_revenue:'0.00',entries:[],entries_count:'0',...overrides};
 }
 
 test('Admin gains tab loads its four currency totals and hides the other admin sections',async()=>{
@@ -301,7 +301,7 @@ test('Financial amounts retain cents, format large totals exactly and display a 
 test('Saving advertising expense waits for the database, prevents duplicate submits and updates the balance',async()=>{
  let release,calls=0,submitted;
  const a=app({rpc:async(name,args)=>{
-  if(name==='save_admin_ad_spend'){calls++;submitted=args;return new Promise(r=>{release=r})}
+  if(name==='add_admin_finance_entry'){calls++;submitted=args;return new Promise(r=>{release=r})}
   return {data:financeData(),error:null};
  }});a.run('state.isAdminAuthenticated=true');await a.run('loadAdminFinances()');
  const input=a.w.document.getElementById('finance-ad-spend-input');input.value='3.25';input.dispatchEvent(new a.w.Event('input'));
@@ -309,7 +309,7 @@ test('Saving advertising expense waits for the database, prevents duplicate subm
  const saving=a.w.dispatchAction(event,'submit');await a.w.dispatchAction(event,'submit');
  assert.equal(calls,1);assert.equal(input.disabled,true);assert.match(a.w.document.getElementById('finance-ad-spend').textContent,/0,00/);
  release({data:financeData({advertising_total:'3.25',balance:'3.25',version:1}),error:null});await saving;
- assert.equal(submitted.p_advertising_total,'3.25');assert.equal(submitted.p_expected_version,0);
+ assert.equal(submitted.p_amount,'3.25');assert.equal(submitted.p_kind,'advertising');assert.match(submitted.p_request_id,/^[a-f0-9-]{36}$/);assert.equal(input.value,'');
  assert.match(a.w.document.getElementById('finance-ad-spend').textContent,/3,25/);assert.match(a.w.document.getElementById('finance-balance').textContent,/3,25/);
  assert.equal(input.disabled,false);assert.equal(form.querySelector('button').disabled,false);a.dom.window.close();
 });
@@ -329,22 +329,21 @@ test('Refreshing the active gains tab updates automatic totals without discardin
  await a.run('fetchFromDatabase()');assert.match(a.w.document.getElementById('finance-accumulated').textContent,/18,00/);assert.equal(input.value,'1.25');a.dom.window.close();
 });
 
-test('A conflicting expense update is rejected and reloads the other administrator’s saved value',async()=>{
- let data=financeData(),captured;
+test('Retrying an expense after a lost response reuses the submission ID and preserves the draft',async()=>{
+ let calls=0;const captured=[];
  const a=app({rpc:async(name,args)=>{
-  if(name==='save_admin_ad_spend'){captured=args;return {data:null,error:{code:'40001'}}}
-  return {data,error:null};
+  if(name==='add_admin_finance_entry'){captured.push(args);if(++calls===1)return {data:null,error:{message:'Lost response'}};return {data:financeData({advertising_total:'7.25',balance:'-0.75',version:1}),error:null};}
+  return {data:financeData(),error:null};
  }});a.run('state.isAdminAuthenticated=true');await a.run('loadAdminFinances()');
  const input=a.w.document.getElementById('finance-ad-spend-input');input.value='7.25';input.dispatchEvent(new a.w.Event('input'));
- data=financeData({advertising_total:'5.00',balance:'1.50',version:1});await a.run('loadAdminFinances()');assert.equal(input.value,'7.25');
- await a.run('handleSaveAdSpend()');assert.equal(captured.p_expected_version,0);assert.equal(input.value,'5.00');
- assert.match(a.w.document.getElementById('toast-container').textContent,/Outro administrador/);a.dom.window.close();
+ await assert.rejects(a.run('handleSaveAdSpend()'));assert.equal(input.value,'7.25');await a.run('handleSaveAdSpend()');
+ assert.equal(captured[0].p_request_id,captured[1].p_request_id);assert.equal(input.value,'');assert.match(a.w.document.getElementById('finance-ad-spend').textContent,/7,25/);a.dom.window.close();
 });
 
 test('Invalid advertising amounts never reach the API',async()=>{
- let saves=0;const a=app({rpc:async name=>{if(name==='save_admin_ad_spend')saves++;return {data:financeData(),error:null}}});
+ let saves=0;const a=app({rpc:async name=>{if(name==='add_admin_finance_entry')saves++;return {data:financeData(),error:null}}});
  a.run('state.isAdminAuthenticated=true');await a.run('loadAdminFinances()');
- for(const value of ['', '-1', '0.001', '1000000001']){
+ for(const value of ['', '0', '-1', '0.001', '1000000001']){
   a.w.document.getElementById('finance-ad-spend-input').value=value;await assert.rejects(a.run('handleSaveAdSpend()'));
  }
  assert.equal(saves,0);a.dom.window.close();
@@ -366,7 +365,7 @@ test('The gains action is blocked for visitors even if they enable the form thro
 test('A financial read started during a save cannot overwrite the successful saved expense',async()=>{
  let releaseSave,releaseRead,calls=0;
  const a=app({rpc:async name=>{
-  if(name==='save_admin_ad_spend')return new Promise(r=>{releaseSave=r});
+  if(name==='add_admin_finance_entry')return new Promise(r=>{releaseSave=r});
   if(++calls===1)return {data:financeData(),error:null};
   return new Promise(r=>{releaseRead=r});
  }});a.run('state.isAdminAuthenticated=true');await a.run('loadAdminFinances()');
@@ -375,4 +374,22 @@ test('A financial read started during a save cannot overwrite the successful sav
  releaseSave({data:financeData({advertising_total:'3.25',balance:'3.25',version:1}),error:null});await saving;
  releaseRead({data:financeData(),error:null});await reading;
  assert.equal(a.run('state.finances.advertising_total'),'3.25');assert.match(a.w.document.getElementById('finance-balance').textContent,/3,25/);assert.equal(a.w.document.getElementById('finance-ad-spend-input').disabled,false);a.dom.window.close();
+});
+
+test('Paid non-participant batches use their own form and never change ranking state',async()=>{
+ let captured;const a=app({rpc:async(name,args)=>{
+  if(name==='add_admin_finance_entry'){captured=args;return {data:financeData({non_participants:'5',non_participant_revenue:'30.00',accumulated_total:'42.00',balance:'36.50',version:1}),error:null};}
+  return {data:financeData(),error:null};
+ }});a.run(`state.isAdminAuthenticated=true;state.players=[{id:'player',nick:'QA'}];state.matches=[]`);await a.run('loadAdminFinances()');
+ a.w.document.getElementById('finance-non-participants-input').value='5';await a.run('handleAddNonParticipants()');
+ assert.equal(captured.p_kind,'non_participant');assert.equal(captured.p_quantity,5);assert.equal(captured.p_amount,null);
+ assert.equal(a.w.document.getElementById('finance-non-participants').textContent,'5');assert.match(a.w.document.getElementById('finance-accumulated').textContent,/42,00/);
+ assert.equal(a.run('state.players.length'),1);assert.equal(a.run('state.matches.length'),0);assert.equal(a.w.document.getElementById('finance-non-participants-input').value,'');a.dom.window.close();
+});
+
+test('Invalid absent counts never reach the API, and ledger notes render as text',async()=>{
+ let writes=0;const a=app({rpc:async(name)=>{if(name==='add_admin_finance_entry')writes++;return {data:financeData({entries:[{id:'x',kind:'advertising',amount:'80.00',quantity:null,note:'<img src=x onerror=alert(1)>',created_at:'2026-10-26T00:00:00Z'}],entries_count:'1'}),error:null}}});
+ a.run('state.isAdminAuthenticated=true');await a.run('loadAdminFinances()');
+ for(const value of ['', '0', '-1', '1.5', '1000001']){a.w.document.getElementById('finance-non-participants-input').value=value;await assert.rejects(a.run('handleAddNonParticipants()'));}
+ assert.equal(writes,0);assert.equal(a.w.document.querySelector('#finance-entries-list img'),null);assert.match(a.w.document.getElementById('finance-entries-list').textContent,/<img/);a.dom.window.close();
 });

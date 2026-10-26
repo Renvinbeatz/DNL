@@ -3,7 +3,7 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const {PGlite}=require('@electric-sql/pglite');
 const {pgcrypto}=require('@electric-sql/pglite/contrib/pgcrypto');
-test('Admin finances calculations, persistence and permissions',async t=>{
+test('Initial finance migration: calculations, persistence and permissions before ledger upgrade',async t=>{
  const db=new PGlite({extensions:{pgcrypto}});
  const admin='dddddddd-dddd-4ddd-8ddd-dddddddddddd',session='eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee';
  const one='11111111-1111-4111-8111-111111111111',two='22222222-2222-4222-8222-222222222222';
@@ -13,7 +13,7 @@ test('Admin finances calculations, persistence and permissions',async t=>{
  const save=async(amount,version)=>(await db.query('SELECT public.save_admin_ad_spend($1,$2) AS data',[amount,version])).rows[0].data;
  try{
   await db.exec(fs.readFileSync('tests/legacy-schema.sql','utf8'));
-  for(const name of fs.readdirSync('supabase/migrations').filter(n=>n.endsWith('.sql')).sort())await db.exec(fs.readFileSync('supabase/migrations/'+name,'utf8'));
+  for(const name of fs.readdirSync('supabase/migrations').filter(n=>n.endsWith('.sql') && !n.endsWith('_finance_entries.sql')).sort())await db.exec(fs.readFileSync('supabase/migrations/'+name,'utf8'));
   await t.test('Anonymous visitors cannot read or modify league finances',async()=>{
    await db.exec(`SET ROLE anon;SET request.jwt.claims='{"role":"anon"}';`);
    for(const query of ['SELECT public.get_admin_finances()', 'SELECT public.save_admin_ad_spend(1,0)', 'SELECT nova_private.get_admin_finances()', 'SELECT * FROM nova_private.finance_settings'])await assert.rejects(db.query(query));
@@ -80,7 +80,7 @@ test('Gains migration also works before the optional security 08 update',async()
  const db=new PGlite({extensions:{pgcrypto}});
  try{
   await db.exec(fs.readFileSync('tests/legacy-schema.sql','utf8'));
-  for(const name of fs.readdirSync('supabase/migrations').filter(n=>n.endsWith('.sql') && !n.endsWith('_08.sql')).sort())await db.exec(fs.readFileSync('supabase/migrations/'+name,'utf8'));
+  for(const name of fs.readdirSync('supabase/migrations').filter(n=>n.endsWith('.sql') && !n.endsWith('_08.sql') && !n.endsWith('_finance_entries.sql')).sort())await db.exec(fs.readFileSync('supabase/migrations/'+name,'utf8'));
   await db.exec(`INSERT INTO auth.users VALUES('dddddddd-dddd-4ddd-8ddd-dddddddddddd');INSERT INTO auth.sessions(id,user_id) VALUES('eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee','dddddddd-dddd-4ddd-8ddd-dddddddddddd');INSERT INTO public.admin_users(user_id) VALUES('dddddddd-dddd-4ddd-8ddd-dddddddddddd');SET ROLE authenticated;SET request.jwt.claims='{"role":"authenticated","sub":"dddddddd-dddd-4ddd-8ddd-dddddddddddd","session_id":"eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee","aal":"aal1"}';`);
   const result=(await db.query('SELECT public.save_admin_ad_spend(1.25,0) AS data')).rows[0].data;
   assert.equal(result.advertising_total,'1.25');assert.equal(result.balance,'-1.25');

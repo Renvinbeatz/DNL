@@ -1,41 +1,55 @@
 # Aba Ganhos do painel administrativo
 
-A aba mostra o histórico completo da liga com a regra confirmada de **R$ 6,00 por jogador em cada partida registrada**.
+Anúncios e inscrições pagas de não participantes são registrados por lançamentos que ficam salvos e se somam ao histórico.
 
 | Campo | Cálculo |
 |---|---|
-| Total acumulado | Soma das participações (`jogadores.matchesCount`) × R$ 6,00 |
-| Repassado em premiação | Soma de `jogadores.earnings`, a mesma usada no cartão Premiações do painel |
-| Gasto com anúncios | Valor total informado e salvo pelo administrador |
+| Total acumulado | (Participações registradas + inscrições pagas de não participantes) × R$ 6,00 |
+| Repassado em premiação | Soma de jogadores.earnings, a mesma usada no cartão Premiações do painel |
+| Gasto com anúncios | Soma de todos os lançamentos de anúncios |
+| Não participantes pagos | Soma das quantidades lançadas manualmente |
+| Inscrições dos não participantes | Quantidade acumulada de não participantes × R$ 6,00 |
 | Saldo final | Acumulado − premiações − anúncios |
 
-Um jogador apenas cadastrado, sem partidas, não gera receita. Um jogador bloqueado continua contribuindo com seu histórico. São considerados todos os registros existentes, sem filtro de mês ou data. O sistema calcula pelos resultados cadastrados; não consulta extratos ou comprovantes de pagamento.
+## Registrar valores
 
-A duplicata histórica indicada na auditoria de segurança continua exigindo revisão pela organização: registros contabilizados em duplicidade também afetam a receita calculada. Esta funcionalidade não remove nem altera resultados anteriores.
+**Anúncios:** informar apenas o novo gasto. Um lançamento de R$ 80,00 seguido de outro de R$ 120,00 deixa o total em R$ 200,00. O campo é esvaziado depois de confirmar o salvamento. Não é mais necessário calcular nem substituir o total manualmente.
 
-O gasto com anúncios começa em zero e fica salvo no Supabase, compartilhado entre os administradores e dispositivos. Informar `50,00` substitui o total anterior por R$ 50,00; não acrescenta R$ 50,00 a ele. O saldo pode ser negativo. O sistema aceita valores de anúncios entre R$ 0,00 e R$ 1.000.000.000,00, com até duas casas decimais.
+**Não participantes:** informar somente novas inscrições pagas de quem não jogou e não aparece nos resultados. Um lote de 3 seguido de outro de 2 deixa a quantidade em 5 e acrescenta R$ 30,00 ao acumulado. O valor se refere a inscrições ao longo dos diários, não a pessoas únicas. Esses lançamentos não criam jogadores, partidas, kills ou premiações e não entram no ranking.
 
-Os totais são calculados no banco. A aba consulta os valores ao abrir e depois das atualizações do histórico, incluindo o ciclo existente de até 60 segundos enquanto o site estiver visível. O botão Atualizar permite uma nova consulta. Atualizar a página preserva o valor já salvo; atualizar os dados enquanto se digita um gasto não apaga o rascunho.
+Ambos os formulários permitem uma descrição opcional de até 160 caracteres, como a data do diário ou a campanha. Cada lançamento permanece no banco com data e autor administrativo. O histórico da aba mostra os 50 mais recentes; os totais consideram todos, inclusive os mais antigos.
 
-Se dois administradores alterarem o gasto ao mesmo tempo, o banco recusa a versão antiga, carrega o valor atualizado e pede que o administrador confira antes de salvar novamente. Uma falha ao carregar mostra os valores como indisponíveis, sem inventar saldo zero e sem interromper as outras áreas do painel.
+Exemplo: duas participações nos resultados e cinco inscrições pagas de não participantes geram R$ 42,00 de receita. Se as premiações somarem R$ 10,00 e os anúncios R$ 20,00, o saldo será R$ 12,00.
 
-## Instalação manual
+Um cadastro sem partidas e sem lançamento de inscrição paga de não participante não gera receita. Jogadores bloqueados continuam contribuindo com o histórico anterior. Todos os cálculos abrangem o histórico completo, sem filtro de mês. O sistema calcula pelos registros, sem consultar extratos ou comprovantes de pagamento. A duplicata histórica identificada na auditoria continua exigindo revisão da organização, pois registros repetidos também afetam os totais.
 
-Esta alteração foi preparada localmente. Nenhuma escrita remota ou publicação foi feita.
+Anúncios devem ser maiores que zero, com até duas casas decimais e limite de R$ 1.000.000.000,00 por lançamento. Não participantes devem ser uma quantidade inteira entre 1 e 1.000.000 por lote. O saldo pode ser negativo.
 
-1. Confirmar o projeto Supabase `aqvyehkrbjttvdirtjzd` e um backup recuperável. As proteções anteriores 01–07, incluindo as funções de sessão/administração no esquema `nova_private`, precisam existir. O banco conferido nesta conversa já as possui.
-2. Gerar o SQL com `npm run package:finances` e executar **uma única vez** `supabase/enable-admin-finances.sql` no SQL Editor com a conta responsável pelo banco. Ele envolve a migração `20261026090612_admin_finances.sql` em uma transação. Não reaplicar o pacote completo de segurança para ativar esta aba.
-3. Publicar o frontend atualizado usando `npm run build` e saída `dist`, incluindo `index.html`, `app.js` e `styles.css`. A migração pode ser aplicada antes da publicação: não muda o funcionamento do frontend anterior.
-4. Entrar como administrador, abrir Ganhos, conferir o acumulado e a premiação, salvar o total de anúncios e recarregar a página para confirmar a persistência.
+## Salvamento e atualização
 
-Como alternativa ao SQL manual, aplicar a migração pelo fluxo habitual do Supabase CLI. Usar somente um dos caminhos e reconciliar o histórico se a organização alternar entre eles.
+Os lançamentos ficam no Supabase e são compartilhados entre administradores e dispositivos. Fechar ou recarregar o site não apaga o histórico. O botão de envio fica bloqueado durante a gravação. Se a resposta de um envio se perder, a repetição do mesmo formulário usa o mesmo identificador e não duplica o lançamento. Um novo envio confirmado é um lançamento adicional; descrições semelhantes não são usadas para deduplicar despesas legítimas.
 
-A migração de ganhos é separada da migração de segurança 08, também preparada nesta conversa. Uma não substitui a outra. O arquivo `security/apply-security.sql` continua sendo o pacote das oito migrações de segurança; ele não inclui esta funcionalidade. Aplicar a nova migração de ganhos depois das migrações anteriores ao usar o fluxo completo do CLI.
+Os totais são consultados ao abrir Ganhos, pelo botão Atualizar e após as atualizações do histórico, incluindo o ciclo existente de até 60 segundos enquanto o site estiver visível. Consultas não apagam o que está sendo digitado. Lançamentos de administradores diferentes se somam no banco, sem substituir os totais uns dos outros.
 
-## Controle de acesso e verificação
+## Aplicação manual
 
-O registro de anúncios fica em `nova_private.finance_settings`, com RLS habilitada e sem acesso direto de visitantes ou contas autenticadas. Somente as funções com conferência de administrador e sessão válida podem ler ou alterar os dados financeiros. As funções expostas são `SECURITY INVOKER`; as implementações privilegiadas ficam no esquema privado, com `search_path` vazio e permissões explícitas. As alterações ficam registradas na trilha privada de auditoria, sem conteúdo adicional de jogadores.
+Nenhuma publicação nem escrita remota foi feita nesta alteração. Confirmar o projeto aqvyehkrbjttvdirtjzd e um backup recuperável. As proteções 01–07, com as verificações de administrador e sessão no esquema nova_private, precisam existir.
 
-O frontend descarta respostas financeiras de sessões antigas e limpa os totais e o formulário ao sair. Nenhum valor financeiro é salvo no `localStorage` ou incluído nas consultas públicas de jogadores.
+Executar `npm run package:finances` para gerar os dois pacotes. Escolher **somente um**:
 
-Verificações locais: `npm test`, `npm run build` e `npm run package:finances`. Os testes usam registros fictícios e cobrem fórmulas, centavos, saldo negativo, persistência, edição/exclusão de partidas, conflitos, validação e recusa de visitantes, contas comuns e sessões revogadas.
+- **A aba Ganhos já foi ativada no banco:** aplicar uma vez `supabase/update-finance-entries.sql`. É somente a atualização `20261026094537_finance_entries.sql`. O total de anúncios já salvo vira um lançamento inicial chamado “Total de anúncios anterior à atualização”; nenhum resultado ou jogador é alterado.
+- **A aba Ganhos ainda não foi ativada:** aplicar uma vez `supabase/enable-admin-finances.sql`. Ele inclui a instalação original e a atualização dos lançamentos, em uma transação.
+
+Em seguida, publicar o frontend com `npm run build` e saída dist, incluindo index.html, app.js e styles.css. Fazer a atualização sem registrar gastos durante a troca e recarregar as abas antigas depois. O endpoint anterior de substituição do gasto perde a permissão de uso; o frontend novo usa a função de lançamentos.
+
+Não executar os dois pacotes nem reaplicar o pacote completo de segurança para ativar esta funcionalidade. Se o projeto usa o CLI, aplicar as migrações financeiras em ordem pelo fluxo habitual, reconciliando o histórico caso tenham sido aplicadas manualmente.
+
+Depois da publicação, conferir o total anterior e a persistência dos novos lançamentos. Todos são aditivos; digitar novamente o total já existente cria uma despesa adicional.
+
+## Permissões e testes
+
+Os registros ficam em nova_private.finance_entries, com RLS e sem acesso direto dos clientes. As funções expostas são SECURITY INVOKER; a implementação privada verifica administrador e sessão válida, usa search_path vazio e permissões explícitas. As inclusões também geram metadados na trilha privada de auditoria.
+
+O frontend descarta respostas de sessões antigas e limpa os dados ao sair. Descrições são exibidas como texto, impedindo execução de HTML. Nenhum dado dos lançamentos é incluído nas consultas públicas de jogadores ou salvo no localStorage.
+
+Verificações: `npm test`, `npm run build` e `npm run package:finances`. Testes em banco descartável e interface isolada cobrem soma, preservação do gasto anterior, idempotência, centavos, saldo, não interferência no ranking, histórico, validação, controle de acesso e revogação de sessão. Os testes da migração financeira original são mantidos separadamente para verificar o caminho de atualização.

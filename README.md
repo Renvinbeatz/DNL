@@ -8,9 +8,9 @@ A auditoria de 26/10/2026 confirmou as proteções anteriores no Supabase e os c
 
 ## Ganhos da liga
 
-A nova aba **Ganhos** do painel mostra acumulado automático de **R$ 6,00 por participação**, o mesmo total de premiações do painel, gasto total com anúncios informado manualmente e saldo final automático. Os anúncios ficam salvos no Supabase e o saldo pode ser negativo. Os cálculos incluem todo o histórico registrado, inclusive jogadores bloqueados.
+A aba **Ganhos** soma **R$ 6,00 por participação registrada e por inscrição paga de não participante**, desconta o mesmo total de premiações do painel e os gastos com anúncios. Anúncios e não participantes são lançamentos acumulativos salvos no Supabase: R$ 80 + R$ 120 totalizam R$ 200; 3 + 2 não participantes totalizam 5 inscrições e R$ 30 de receita adicional. Não participantes não geram jogadores nem resultados no ranking. O saldo pode ser negativo e a aba exibe os 50 lançamentos mais recentes, mantendo todos salvos.
 
-Para ativar, gerar `supabase/enable-admin-finances.sql` com `npm run package:finances`, aplicar esse arquivo uma única vez no banco com as proteções 01–07 e publicar o frontend atualizado. Essa funcionalidade possui migração própria; não reaplicar o pacote completo de segurança. Fórmulas, permissões e instruções estão em [supabase/GANHOS.md](supabase/GANHOS.md). A aplicação e publicação continuam manuais.
+Para quem já ativou a aba Ganhos, aplicar apenas `supabase/update-finance-entries.sql` e publicar o frontend atualizado. O gasto antigo vira um lançamento inicial preservado. Para a primeira instalação, usar `supabase/enable-admin-finances.sql`, que inclui as duas migrações financeiras. Ambos são gerados por `npm run package:finances` e exigem as proteções 01–07. Não reaplicar o pacote completo de segurança. Fórmulas e instruções estão em [supabase/GANHOS.md](supabase/GANHOS.md). A aplicação e publicação continuam manuais.
 
 ## Aplicar as correções da auditoria de 26/10/2026
 

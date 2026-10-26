@@ -230,7 +230,7 @@
           <h4 class="finance-title">GANHOS DA LIGA</h4>
           <button type="button" class="btn-copy" data-click="loadAdminFinances">ATUALIZAR</button>
         </div>
-        <p class="finance-description">R$ 6,00 por participação registrada. As premiações seguem o mesmo total do painel.</p>
+        <p class="finance-description">Inscrição de R$ 6,00 para participantes e não participantes pagos. As premiações seguem o mesmo total do painel.</p>
         <p id="finance-status" class="finance-status" role="status">Entre no painel para consultar os valores.</p>
         <div class="finance-grid" aria-label="Resumo de ganhos">
           <div class="stat-card accent-gold">
@@ -251,14 +251,45 @@
             <p class="finance-note">Acumulado − premiações − anúncios</p>
           </div>
         </div>
+        <div class="finance-attendance">
+          <div>
+            <div class="stat-label">NÃO PARTICIPANTES PAGOS</div>
+            <div id="finance-non-participants" class="stat-val">—</div>
+          </div>
+          <div>
+            <div class="stat-label">INSCRIÇÕES DOS NÃO PARTICIPANTES</div>
+            <div id="finance-non-participant-revenue" class="stat-val">—</div>
+          </div>
+        </div>
         <form id="form-ad-spend" data-submit="handleSaveAdSpend" class="finance-form">
           <div class="form-group">
-            <label for="finance-ad-spend-input">GASTO TOTAL COM ANÚNCIOS (R$)</label>
-            <input id="finance-ad-spend-input" type="number" inputmode="decimal" class="form-control" min="0" max="1000000000" step="0.01" placeholder="0,00" aria-describedby="finance-ad-spend-help" required disabled>
-            <p id="finance-ad-spend-help" class="finance-note">Informe o valor total gasto até agora. Ao salvar, ele substitui o valor anterior.</p>
+            <label for="finance-ad-spend-input">NOVO GASTO COM ANÚNCIOS (R$)</label>
+            <input id="finance-ad-spend-input" type="number" inputmode="decimal" class="form-control" min="0.01" max="1000000000" step="0.01" placeholder="Ex.: 80,00" aria-describedby="finance-ad-spend-help" required disabled>
+            <p id="finance-ad-spend-help" class="finance-note">Cada lançamento soma ao gasto já salvo. Ex.: R$ 80,00 + R$ 120,00 = R$ 200,00.</p>
           </div>
-          <button type="submit" class="btn-primary" disabled>SALVAR GASTO COM ANÚNCIOS</button>
+          <div class="form-group">
+            <label for="finance-ad-note">DESCRIÇÃO (OPCIONAL)</label>
+            <input id="finance-ad-note" class="form-control" type="text" maxlength="160" placeholder="Ex.: Campanha de segunda-feira" disabled>
+          </div>
+          <button type="submit" class="btn-primary" disabled>ADICIONAR GASTO COM ANÚNCIOS</button>
         </form>
+        <form id="form-non-participants" data-submit="handleAddNonParticipants" class="finance-form">
+          <div class="form-group">
+            <label for="finance-non-participants-input">ADICIONAR NÃO PARTICIPANTES PAGOS</label>
+            <input id="finance-non-participants-input" type="number" inputmode="numeric" class="form-control" min="1" max="1000000" step="1" placeholder="Ex.: 5" aria-describedby="finance-non-participants-help" required disabled>
+            <p id="finance-non-participants-help" class="finance-note">Informe somente novas inscrições pagas de quem não jogou. Cada unidade soma R$ 6,00 ao acumulado e não altera o ranking.</p>
+          </div>
+          <div class="form-group">
+            <label for="finance-non-participant-note">DESCRIÇÃO (OPCIONAL)</label>
+            <input id="finance-non-participant-note" class="form-control" type="text" maxlength="160" placeholder="Ex.: Não participantes do diário de segunda-feira" disabled>
+          </div>
+          <button type="submit" class="btn-primary" disabled>ADICIONAR NÃO PARTICIPANTES</button>
+        </form>
+        <div class="finance-form">
+          <h4 class="finance-title">HISTÓRICO DE LANÇAMENTOS</h4>
+          <p id="finance-history-info" class="finance-note"></p>
+          <div id="finance-entries-list"></div>
+        </div>
       </div>
 
       <div id="admin-sub-messages" class="card hidden">

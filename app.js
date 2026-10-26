@@ -23,7 +23,6 @@
     let financeFetching = null;
     let financeReadEpoch = 0;
     let financeLoadState = 'idle';
-    let financeDraftDirty = false;
     const actionLocks = new Set();
     const LOGIN_RETRY_KEY = 'nova_login_retry_until_v1';
     const LOGIN_RETRY_MS = 15000;
@@ -319,7 +318,7 @@
     function invalidateSessionReads() {
       sessionEpoch++;
       fetching=null;
-      financeFetching=null;financeReadEpoch++;financeLoadState='idle';financeDraftDirty=false;
+      financeFetching=null;financeReadEpoch++;financeLoadState='idle';
       Object.assign(state,{isAdminAuthenticated:false,currentPlayer:null,players:[],matches:[],coupons:[],messages:[],finances:null});
     }
 
@@ -533,30 +532,44 @@
     function validateFinanceSummary(data) {
       if(!data || Array.isArray(data) || !Number.isInteger(data.version) || data.version<0 || !/^[0-9]+$/.test(String(data.participations))) throw new Error('Resposta inválida.');
       for(const key of ['registration_fee','accumulated_total','payout_total','advertising_total','balance']) financeCents(data[key]);
+      if(!/^[0-9]+$/.test(String(data.non_participants)) || !/^[0-9]+$/.test(String(data.entries_count)) || !Array.isArray(data.entries)) throw new Error('Resposta inválida.');
+      financeCents(data.non_participant_revenue);
       return data;
     }
 
     function renderAdminFinances() {
-      const form=document.getElementById('form-ad-spend');
-      const input=document.getElementById('finance-ad-spend-input');
       const status=document.getElementById('finance-status');
-      const fields={accumulated_total:'finance-accumulated',payout_total:'finance-payout',advertising_total:'finance-ad-spend',balance:'finance-balance'};
-      if(!state.isAdminAuthenticated){state.finances=null;financeLoadState='idle';financeDraftDirty=false;}
+      const fields={accumulated_total:'finance-accumulated',payout_total:'finance-payout',advertising_total:'finance-ad-spend',balance:'finance-balance',non_participant_revenue:'finance-non-participant-revenue'};
+      if(!state.isAdminAuthenticated){state.finances=null;financeLoadState='idle';}
       const data=state.isAdminAuthenticated ? state.finances : null;
       for(const [key,id]of Object.entries(fields)) document.getElementById(id).textContent=data ? formatFinanceMoney(data[key]) : '—';
       const balance=document.getElementById('finance-balance');
       balance.classList.toggle('finance-negative',!!data && financeCents(data.balance)<0n);
       balance.classList.toggle('finance-positive',!!data && financeCents(data.balance)>=0n);
       const ready=!!data && financeLoadState==='ready';
-      input.disabled=!ready || actionLocks.has('handleSaveAdSpend');
-      form.querySelector('button[type="submit"]').disabled=input.disabled;
-      if(!data && !state.isAdminAuthenticated){input.value='';delete form.dataset.version;}
-      else if(data && !financeDraftDirty){input.value=data.advertising_total;form.dataset.version=String(data.version);}
+      document.getElementById('finance-non-participants').textContent=data ? new Intl.NumberFormat('pt-BR').format(BigInt(data.non_participants)) : '—';
+      for(const id of ['form-ad-spend','form-non-participants']){
+        const form=document.getElementById(id);
+        form.querySelectorAll('input,button').forEach(el=>{el.disabled=!ready || actionLocks.has(form.dataset.submit);});
+        if(!state.isAdminAuthenticated){form.reset();delete form._financePending;}
+      }
       status.textContent=!state.isAdminAuthenticated ? 'Entre no painel para consultar os valores.'
         : financeLoadState==='error' ? 'Não foi possível carregar os ganhos. Tente atualizar.'
         : financeLoadState==='loading' ? 'Atualizando os valores…'
-        : data ? `${new Intl.NumberFormat('pt-BR').format(BigInt(data.participations))} participações registradas × R$ 6,00. Valores calculados pelo histórico da liga.`
+        : data ? `(${new Intl.NumberFormat('pt-BR').format(BigInt(data.participations))} participações + ${new Intl.NumberFormat('pt-BR').format(BigInt(data.non_participants))} inscrições de não participantes) × R$ 6,00.`
         : 'Abra a aba para consultar os ganhos.';
+      const history=document.getElementById('finance-entries-list');history.replaceChildren();
+      document.getElementById('finance-history-info').textContent=data ? `Exibindo ${data.entries.length} de ${data.entries_count} lançamentos (até os 50 mais recentes). Todos ficam salvos.` : '';
+      if(data && data.entries.length===0){const empty=document.createElement('p');empty.className='finance-note';empty.textContent='Nenhum lançamento registrado.';history.append(empty);}
+      for(const entry of data?.entries || []){
+        const row=document.createElement('div');row.className='finance-entry';
+        const title=document.createElement('strong');
+        title.textContent=entry.kind==='advertising' ? `Anúncios · ${formatFinanceMoney(entry.amount)}` : `Não participantes · ${entry.quantity} inscrições · ${formatFinanceMoney(String(BigInt(entry.quantity)*6n))}`;
+        row.append(title);
+        if(entry.note){const note=document.createElement('p');note.textContent=entry.note;row.append(note);}
+        const date=new Date(entry.created_at);if(!Number.isNaN(date.getTime())){const time=document.createElement('time');time.dateTime=date.toISOString();time.textContent=date.toLocaleString('pt-BR');row.append(time);}
+        history.append(row);
+      }
     }
 
     async function loadAdminFinances(force=false) {
@@ -569,7 +582,8 @@
         try{
           const data=validateFinanceSummary(await checked(_supabase.rpc('get_admin_finances')));
           if(epoch!==sessionEpoch || readEpoch!==financeReadEpoch || !state.isAdminAuthenticated) return;
-          state.finances=data;financeLoadState='ready';
+          if(!state.finances || data.version>=state.finances.version) state.finances=data;
+          financeLoadState='ready';
         }catch{
           if(epoch!==sessionEpoch || readEpoch!==financeReadEpoch || !state.isAdminAuthenticated) return;
           state.finances=null;financeLoadState='error';
@@ -579,29 +593,38 @@
       try{return await request;}finally{if(financeFetching===request) financeFetching=null;}
     }
 
-    async function handleSaveAdSpend() {
+    async function addFinanceEntry(kind) {
       if(!state.isAdminAuthenticated || !state.finances || financeLoadState!=='ready') throw new Error('Acesso inválido.');
-      const raw=document.getElementById('finance-ad-spend-input').value;
-      const cents=financeCents(raw);
-      const version=Number(document.getElementById('form-ad-spend').dataset.version);
-      if(cents<0n || cents>100000000000n || !Number.isInteger(version) || version<0) throw new Error('Valor inválido.');
+      if(!['advertising','non_participant'].includes(kind)) throw new Error('Lançamento inválido.');
+      const advertising=kind==='advertising';
+      const form=document.getElementById(advertising ? 'form-ad-spend' : 'form-non-participants');
+      const input=document.getElementById(advertising ? 'finance-ad-spend-input' : 'finance-non-participants-input');
+      const note=document.getElementById(advertising ? 'finance-ad-note' : 'finance-non-participant-note').value.trim();
+      let amount=null,quantity=null;
+      if(advertising){const cents=financeCents(input.value);if(cents<=0n || cents>100000000000n) throw new Error('Valor inválido.');amount=`${cents/100n}.${String(cents%100n).padStart(2,'0')}`;}
+      else quantity=numberValue(input.value,1,1000000,true);
+      if(note.length>160) throw new Error('Descrição muito longa.');
+      const args={p_kind:kind,p_amount:amount,p_quantity:quantity,p_note:note};
+      const signature=JSON.stringify(args);
+      if(form._financePending?.signature!==signature) form._financePending={signature,id:crypto.randomUUID()};
+      args.p_request_id=form._financePending.id;
       const epoch=sessionEpoch;
       financeReadEpoch++;financeFetching=null;
       try{
-        const data=validateFinanceSummary(await checked(_supabase.rpc('save_admin_ad_spend',{p_advertising_total:raw,p_expected_version:version})));
+        const data=validateFinanceSummary(await checked(_supabase.rpc('add_admin_finance_entry',args)));
         if(epoch!==sessionEpoch || !state.isAdminAuthenticated) return;
         financeReadEpoch++;financeFetching=null;financeLoadState='ready';
-        state.finances=data;financeDraftDirty=false;renderAdminFinances();
-        showToast('Gasto com anúncios salvo. Saldo atualizado.');
+        if(!state.finances || data.version>=state.finances.version) state.finances=data;
+        form.reset();delete form._financePending;renderAdminFinances();
+        showToast(advertising ? 'Gasto adicionado ao total de anúncios.' : 'Não participantes adicionados. Inscrições incluídas no acumulado.');
       }catch(error){
         if(epoch!==sessionEpoch || !state.isAdminAuthenticated) return;
-        if(error?.code==='40001'){
-          financeDraftDirty=false;await loadAdminFinances(true);
-          showToast('Outro administrador alterou o gasto. Confira o valor atualizado antes de salvar.','danger');return;
-        }
         throw error;
       }
     }
+
+    function handleSaveAdSpend(){return addFinanceEntry('advertising');}
+    function handleAddNonParticipants(){return addFinanceEntry('non_participant');}
 
     function openModal(id) {
       const modal=document.getElementById(id); if (!modal) return;
@@ -1576,9 +1599,9 @@
       handleBulkPlayersImport:()=>handleBulkPlayersImport(), handleAddMatch:()=>handleAddMatch(),
       handleEditMatch:()=>handleEditMatch(), handleBulkImport:()=>handleBulkImport(),
       handleAddCoupon:()=>handleAddCoupon(),
-      loadAdminFinances:()=>loadAdminFinances(true),handleSaveAdSpend:()=>handleSaveAdSpend()
+      loadAdminFinances:()=>loadAdminFinances(true),handleSaveAdSpend:()=>handleSaveAdSpend(),handleAddNonParticipants:()=>handleAddNonParticipants()
     };
-    const adminActions=new Set(['switchAdminSubtab','openAddMatchModal','addPlayerRowToMatch','removePlayerRow','openEditMatchModal','deleteMatchGroup','updatePlayerStatus','toggleMedalFlag','deleteCoupon','deleteMessage','handleSendMessage','handleAddPlayer','handleBulkPlayersImport','handleAddMatch','handleEditMatch','handleBulkImport','handleAddCoupon','loadAdminFinances','handleSaveAdSpend']);
+    const adminActions=new Set(['switchAdminSubtab','openAddMatchModal','addPlayerRowToMatch','removePlayerRow','openEditMatchModal','deleteMatchGroup','updatePlayerStatus','toggleMedalFlag','deleteCoupon','deleteMessage','handleSendMessage','handleAddPlayer','handleBulkPlayersImport','handleAddMatch','handleEditMatch','handleBulkImport','handleAddCoupon','loadAdminFinances','handleSaveAdSpend','handleAddNonParticipants']);
 
     async function dispatchAction(event,type) {
       const el=event.target.closest('[data-'+type+']'); if(!el) return;
@@ -1593,14 +1616,17 @@
       controls.forEach(c=>{c.disabled=true;}); el.setAttribute('aria-busy','true');
       try { await actions[name](el); }
       catch { showToast('Não foi possível concluir. Verifique os dados, sua conexão e tente novamente.','danger'); }
-      finally { actionLocks.delete(name); controls.forEach((c,i)=>{c.disabled=previous[i];}); el.removeAttribute('aria-busy'); renderLoginRetryControls(); }
+      finally {
+        actionLocks.delete(name); controls.forEach((c,i)=>{c.disabled=previous[i];}); el.removeAttribute('aria-busy'); renderLoginRetryControls();
+        if(['handleSaveAdSpend','handleAddNonParticipants'].includes(name)) renderAdminFinances();
+      }
     }
 
     let lastInteraction=Date.now();
     document.addEventListener('click',event=>{lastInteraction=Date.now(); void dispatchAction(event,'click');});
     document.addEventListener('submit',event=>{lastInteraction=Date.now(); void dispatchAction(event,'submit');});
     document.addEventListener('change',event=>{lastInteraction=Date.now(); void dispatchAction(event,'change');});
-    document.getElementById('finance-ad-spend-input').addEventListener('input',()=>{lastInteraction=Date.now();financeDraftDirty=true;});
+    document.querySelectorAll('#form-ad-spend input, #form-non-participants input').forEach(input=>input.addEventListener('input',()=>{lastInteraction=Date.now();}));
     document.addEventListener('invalid',event=>{
       const form=event.target.closest('form');
       if(form && loginActions.has(form.dataset.submit)) startLoginRetryWait();
