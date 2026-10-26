@@ -387,7 +387,19 @@
     }
   
 :focus-visible { outline: 2px solid var(--neon-gold); outline-offset: 3px; }
-.login-wait { margin-top: 10px; color: var(--neon-gold); font-size: 12px; line-height: 1.4; }
+.login-wait { margin-top: 12px; padding: 14px; border: 1px solid rgba(229,184,57,.35); border-radius: 12px; background: rgba(229,184,57,.07); color: var(--neon-gold); font-size: 12px; line-height: 1.4; }
+.login-wait-header { display: flex; align-items: center; gap: 10px; }
+.login-wait-icon { font-size: 18px; flex-shrink: 0; }
+.login-wait-copy { flex: 1; min-width: 0; }
+.login-wait-copy strong { display: block; font-size: 12px; }
+.login-wait-copy span { display: block; margin-top: 3px; color: var(--text-muted); font-size: 11px; }
+.login-wait-counter { display: flex; align-items: baseline; gap: 3px; flex-shrink: 0; padding: 6px 10px; border-radius: 8px; background: rgba(229,184,57,.12); font-variant-numeric: tabular-nums; }
+.login-wait-counter strong { font-size: 28px; line-height: 1; }
+.login-wait-counter span { font-size: 12px; }
+.login-wait progress { display: block; width: 100%; height: 6px; margin-top: 12px; overflow: hidden; border: 0; border-radius: 99px; background: rgba(229,184,57,.12); accent-color: var(--neon-gold); appearance: none; }
+.login-wait progress::-webkit-progress-bar { background: rgba(229,184,57,.12); border-radius: 99px; }
+.login-wait progress::-webkit-progress-value { background: linear-gradient(90deg,#e5b839,#f8d775); border-radius: 99px; }
+.login-wait progress::-moz-progress-bar { background: #e5b839; border-radius: 99px; }
 button[data-login-label]:disabled { cursor: not-allowed; opacity: .65; }
 [aria-busy="true"] { opacity: .65; }
 .modal-overlay:not(.active) { visibility: hidden; }

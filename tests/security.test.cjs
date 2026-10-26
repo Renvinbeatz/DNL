@@ -125,8 +125,14 @@ test('Wrong administrative password blocks new authentication requests for exact
 test('Wait survives reload and storage events synchronize the countdown with other tabs',()=>{
  let now=105000;const a=app({},w=>{w.Date.now=()=>now;w.localStorage.setItem('nova_login_retry_until_v1','115000')});
  const button=a.w.document.querySelector('#form-player-login button');assert.equal(button.disabled,true);assert.match(button.textContent,/10s/);
+ for(const notice of a.w.document.querySelectorAll('[data-login-wait]')){
+  assert.equal(notice.classList.contains('hidden'),false);assert.equal(notice.querySelector('[data-login-seconds]').textContent,'10');assert.equal(notice.querySelector('progress').value,10);
+ }
+ now=110500;a.run('renderLoginRetryControls()');assert.equal(a.w.document.querySelector('[data-login-seconds]').textContent,'5');assert.equal(a.w.document.querySelector('[data-login-progress]').value,4.5);
+ now=105000;a.run('renderLoginRetryControls()');
  a.run(`openModal('modal-player-auth');closeModal('modal-player-auth');openModal('modal-admin-auth')`);assert.match(button.textContent,/10s/);
  now=115000;a.run('renderLoginRetryControls()');assert.equal(button.disabled,false);
+ for(const notice of a.w.document.querySelectorAll('[data-login-wait]')) {assert.equal(notice.classList.contains('hidden'),true);assert.equal(notice.querySelector('progress').value,0);}
  a.w.localStorage.setItem('nova_login_retry_until_v1','130000');a.w.dispatchEvent(new a.w.StorageEvent('storage',{key:'nova_login_retry_until_v1',newValue:'130000'}));assert.match(button.textContent,/15s/);assert.equal(button.disabled,true);a.dom.window.close();
 });
 

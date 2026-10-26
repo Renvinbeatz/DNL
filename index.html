@@ -299,7 +299,14 @@
           <input type="text" inputmode="numeric" autocomplete="off" maxlength="20" pattern="[0-9]{3,20}" id="player-login-id" class="form-control" placeholder="Digite seu ID FF" required>
         </div>
         <button type="submit" class="btn-primary" data-login-label="ENTRAR" aria-describedby="player-login-wait">ENTRAR</button>
-        <p id="player-login-wait" data-login-wait role="status" class="login-wait hidden"></p>
+        <div id="player-login-wait" data-login-wait class="login-wait hidden">
+          <div class="login-wait-header">
+            <i class="fa-solid fa-hourglass-half login-wait-icon" aria-hidden="true"></i>
+            <div class="login-wait-copy"><strong>Aguarde para tentar novamente</strong><span>O acesso será liberado ao fim da contagem.</span></div>
+            <div class="login-wait-counter" role="timer" aria-live="off"><strong data-login-seconds>15</strong><span>s</span></div>
+          </div>
+          <progress data-login-progress max="15" value="15" aria-label="Tempo restante para tentar novamente"></progress>
+        </div>
       </form>
     </div>
   </div>
@@ -320,7 +327,14 @@
           <input type="password" autocomplete="current-password" maxlength="1024" id="admin-pass-input" class="form-control" placeholder="Senha de administrador" required>
         </div>
         <button type="submit" class="btn-primary" data-login-label="ENTRAR NO PAINEL" aria-describedby="admin-login-wait">ENTRAR NO PAINEL</button>
-        <p id="admin-login-wait" data-login-wait role="status" class="login-wait hidden"></p>
+        <div id="admin-login-wait" data-login-wait class="login-wait hidden">
+          <div class="login-wait-header">
+            <i class="fa-solid fa-hourglass-half login-wait-icon" aria-hidden="true"></i>
+            <div class="login-wait-copy"><strong>Aguarde para tentar novamente</strong><span>O acesso será liberado ao fim da contagem.</span></div>
+            <div class="login-wait-counter" role="timer" aria-live="off"><strong data-login-seconds>15</strong><span>s</span></div>
+          </div>
+          <progress data-login-progress max="15" value="15" aria-label="Tempo restante para tentar novamente"></progress>
+        </div>
       </form>
     </div>
   </div>

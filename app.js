@@ -341,8 +341,10 @@
         const notice=form.querySelector('[data-login-wait]');
         button.disabled=seconds>0 || actionLocks.has(form.dataset.submit);
         button.textContent=seconds>0 ? `TENTAR NOVAMENTE EM ${seconds}s` : button.dataset.loginLabel;
-        const text=seconds>0 ? 'Aguarde a contagem no botão para tentar entrar novamente.' : '';
-        if(notice.textContent!==text) notice.textContent=text;
+        notice.querySelector('[data-login-seconds]').textContent=String(seconds);
+        const progress=notice.querySelector('[data-login-progress]');
+        progress.value=Math.max(0,Math.min(LOGIN_RETRY_MS,loginRetryUntil-Date.now()))/1000;
+        progress.setAttribute('aria-valuetext',`${seconds} ${seconds===1 ? 'segundo restante' : 'segundos restantes'}`);
         notice.classList.toggle('hidden',seconds===0);
       });
       if(seconds>0 && loginRetryTimer===null) loginRetryTimer=setInterval(renderLoginRetryControls,250);
