@@ -387,6 +387,9 @@
     }
   
 :focus-visible { outline: 2px solid var(--neon-gold); outline-offset: 3px; }
+.ranking-tabs { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 6px; }
+.ranking-tabs .auth-tab-btn { display: flex; align-items: center; justify-content: center; gap: 4px; padding: 9px 4px; font-size: 10px; }
+.ranking-tabs .auth-tab-btn svg, .ranking-tabs .auth-tab-btn i { flex-shrink: 0; }
 .login-wait { margin-top: 12px; padding: 14px; border: 1px solid rgba(229,184,57,.35); border-radius: 12px; background: rgba(229,184,57,.07); color: var(--neon-gold); font-size: 12px; line-height: 1.4; }
 .login-wait-header { display: flex; align-items: center; gap: 10px; }
 .login-wait-icon { font-size: 18px; flex-shrink: 0; }

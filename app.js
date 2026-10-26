@@ -32,12 +32,11 @@
     let filterDebounceTimer = null;
     let currentMatchPage = 1;
     const MATCHES_PER_PAGE = 10;
-    let currentRankingType = 'kills'; // 'kills' ou 'earnings'
+    let currentRankingType = 'kills'; // kills, earnings ou booyahs
 
     function switchRankingType(type) {
+      if(!['kills','earnings','booyahs'].includes(type)) return;
       currentRankingType = type;
-      document.getElementById('tab-ranking-kills').classList.toggle('active', type === 'kills');
-      document.getElementById('tab-ranking-earnings').classList.toggle('active', type === 'earnings');
       renderRankingList();
     }
 
@@ -200,35 +199,60 @@
 
     function renderRankingList() {
       const rankingContainer = document.getElementById('ranking-list-container');
+      const isBooyahs=currentRankingType==='booyahs';
+      for(const type of ['kills','earnings','booyahs']){
+        const tab=document.getElementById('tab-ranking-'+type);
+        tab.classList.toggle('active',currentRankingType===type);
+        tab.setAttribute('aria-pressed',String(currentRankingType===type));
+      }
+      document.getElementById('ranking-description').textContent=isBooyahs
+        ? 'Mais Booyahs (Top 1) primeiro. Desempate por Top 2, kills e nome. Participam jogadores com Top 1 ou Top 2 registrado.'
+        : currentRankingType==='earnings' ? 'Participam jogadores com ganhos acumulados acima de zero.' : 'Participam jogadores com pelo menos 1 abate registrado.';
 
-      // Só entra no ranking quem já tem valor > 0 na métrica da aba ativa
-      // (kills ou ganhos) — filtra jogador cadastrado que ainda não jogou nada.
-      const eligiblePlayers = state.players.filter(p =>
-        currentRankingType === 'earnings' ? parseFloat(p.earnings) > 0 : p.kills > 0
+      // Public projections use matching player aliases; never group by a masked game ID.
+      const podiums=new Map(),seenMatches=new Set();
+      if(isBooyahs) for(const match of state.matches){
+        const pos=Number(match.pos);
+        if(!match.playerId || (pos!==1 && pos!==2) || (match.id && seenMatches.has(match.id))) continue;
+        if(match.id) seenMatches.add(match.id);
+        const id=String(match.playerId);
+        if(!podiums.has(id)) podiums.set(id,{booyahs:0,top2:0});
+        podiums.get(id)[pos===1 ? 'booyahs' : 'top2']++;
+      }
+
+      const players=isBooyahs ? state.players.map(p=>({...p,...(podiums.get(String(p.id)) || {booyahs:0,top2:0})})) : state.players;
+      const eligiblePlayers = players.filter(p =>
+        isBooyahs ? p.booyahs>0 || p.top2>0 : currentRankingType === 'earnings' ? parseFloat(p.earnings) > 0 : p.kills > 0
       );
 
       if (eligiblePlayers.length === 0) {
-        rankingContainer.innerHTML = `<div class="empty-state"><i class="fa-solid fa-trophy"></i><p>Nenhum participante no ranking ainda.</p></div>`;
+        rankingContainer.innerHTML = `<div class="empty-state"><i class="fa-solid fa-trophy"></i><p>${isBooyahs ? 'Nenhum Top 1 ou Top 2 registrado ainda.' : 'Nenhum participante no ranking ainda.'}</p></div>`;
         return;
       }
 
       const sortedPlayers = [...eligiblePlayers].sort((a, b) =>
-        currentRankingType === 'earnings'
+        isBooyahs
+          ? (b.booyahs-a.booyahs) || (b.top2-a.top2) || (b.kills-a.kills) || String(a.nick).localeCompare(String(b.nick)) || String(a.id).localeCompare(String(b.id))
+          : currentRankingType === 'earnings'
           ? (parseFloat(b.earnings) - parseFloat(a.earnings))
           : (b.kills - a.kills) || String(a.nick).localeCompare(String(b.nick))
       );
 
       rankingContainer.innerHTML = sortedPlayers.map((p, idx) => {
-        const mainValue = currentRankingType === 'earnings'
+        const mainValue = isBooyahs
+          ? `${p.booyahs} ${p.booyahs===1 ? 'Booyah' : 'Booyahs'}`
+          : currentRankingType === 'earnings'
           ? `R$ ${parseFloat(p.earnings).toFixed(2)}`
           : `${p.kills} Kills`;
-        const subValue = currentRankingType === 'earnings'
+        const subValue = isBooyahs
+          ? `${p.top2} Top 2`
+          : currentRankingType === 'earnings'
           ? `${p.kills} kills`
           : `R$ ${parseFloat(p.earnings).toFixed(2)}`;
         const positionHTML = `<span style="font-family: var(--font-heading); font-size: 15px; color: var(--neon-gold); width: 26px; text-align: center; flex-shrink: 0;">#${idx + 1}</span>`;
 
         return `
-          <div class="card" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; padding: 12px;">
+          <div class="card ranking-entry" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; padding: 12px;">
             <div style="display: flex; align-items: center; gap: 10px;">
               ${positionHTML}
               <div>
@@ -237,10 +261,10 @@
               </div>
             </div>
             <div style="text-align: right;">
-              <div style="font-family: var(--font-sub); font-weight: 700; color: var(--neon-gold); font-size: 16px;">
+              <div class="ranking-main-value" style="font-family: var(--font-sub); font-weight: 700; color: var(--neon-gold); font-size: 16px;">
                 ${mainValue}
               </div>
-              <div style="font-size: 10px; color: var(--text-muted);">${subValue}</div>
+              <div class="ranking-sub-value" style="font-size: 10px; color: var(--text-muted);">${subValue}</div>
             </div>
           </div>
         `;

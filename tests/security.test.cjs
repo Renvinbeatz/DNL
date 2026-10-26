@@ -50,6 +50,36 @@ test('Own rank remains correct for identical nicknames and masked IDs',()=>{
  const a=app();a.run(`state.currentPlayer={id:'real',rankingId:'second',nick:'Same',gameId:'12349999',status:'normal',kills:2,matchesCount:1,earnings:0};state.players=[{id:'first',nick:'Same',gameId:'1234****',kills:3},{id:'second',nick:'Same',gameId:'1234****',kills:2}];renderAll()`);
  assert.equal(a.w.document.getElementById('dash-rank').innerText,'#2');a.dom.window.close();
 });
+
+test('Booyah ranking counts Top 1 first, uses Top 2 for ties and includes podiums with zero kills',()=>{
+ const a=app();a.run(`
+  state.players=[{id:'a',nick:'Alice',gameId:'1234****'},{id:'b',nick:'Bruno',gameId:'1234****',kills:99},{id:'c',nick:'Clara',gameId:'9876****'},{id:'d',nick:'Dani',gameId:'5555****'},{id:'e',nick:'Empty',gameId:'7777****'}].map(p=>({kills:0,earnings:0,matchesCount:5,...p}));
+  state.matches=[{id:'1',playerId:'a',pos:1},{id:'2',playerId:'a',pos:1},{id:'3',playerId:'b',pos:1},{id:'4',playerId:'b',pos:2},{id:'5',playerId:'b',pos:2},{id:'6',playerId:'b',pos:2},{id:'7',playerId:'c',pos:1},{id:'8',playerId:'c',pos:1},{id:'9',playerId:'c',pos:2},{id:'10',playerId:'d',pos:2},{id:'11',playerId:'e',pos:3},{id:'1',playerId:'a',pos:1},{id:'12',playerId:'deleted',pos:1}];
+  switchRankingType('booyahs');
+ `);
+ const rows=[...a.w.document.querySelectorAll('#ranking-list-container .ranking-entry')];
+ assert.deepEqual(rows.map(row=>row.querySelector('strong').textContent),['Clara','Alice','Bruno','Dani']);
+ assert.deepEqual(rows.map(row=>row.querySelector('.ranking-main-value').textContent.trim()),['2 Booyahs','2 Booyahs','1 Booyah','0 Booyahs']);
+ assert.deepEqual(rows.map(row=>row.querySelector('.ranking-sub-value').textContent),['1 Top 2','0 Top 2','3 Top 2','1 Top 2']);
+ assert.ok(parseFloat(rows[0].querySelector('.ranking-sub-value').style.fontSize)<parseFloat(rows[0].querySelector('.ranking-main-value').style.fontSize));
+ assert.equal(a.w.document.getElementById('tab-ranking-booyahs').getAttribute('aria-pressed'),'true');
+ a.dom.window.close();
+});
+
+test('Booyah totals recalculate after editing/deleting a result and do not leak into other ranking categories',()=>{
+ const a=app();a.run(`state.players=[{id:'a',nick:'Alice',gameId:'12345',kills:7,earnings:12,matchesCount:1}];state.matches=[{id:'1',playerId:'a',pos:1}];switchRankingType('booyahs')`);
+ assert.equal(a.w.document.querySelector('.ranking-main-value').textContent.trim(),'1 Booyah');
+ a.run(`state.matches[0].pos=2;renderRankingList()`);assert.equal(a.w.document.querySelector('.ranking-main-value').textContent.trim(),'0 Booyahs');assert.equal(a.w.document.querySelector('.ranking-sub-value').textContent,'1 Top 2');
+ a.run(`switchRankingType('kills')`);assert.equal(a.w.document.querySelector('.ranking-main-value').textContent.trim(),'7 Kills');
+ a.run(`switchRankingType('earnings')`);assert.equal(a.w.document.querySelector('.ranking-main-value').textContent.trim(),'R$ 12.00');
+ a.run(`state.matches=[];switchRankingType('booyahs')`);assert.equal(a.w.document.querySelectorAll('.ranking-entry').length,0);assert.match(a.w.document.getElementById('ranking-list-container').textContent,/Nenhum Top 1 ou Top 2/);
+ assert.equal(a.w.document.getElementById('tab-ranking-kills').getAttribute('aria-pressed'),'false');a.dom.window.close();
+});
+
+test('Booyah ties use kills and name deterministically, with player IDs rather than masked game IDs',()=>{
+ const a=app();a.run(`state.players=[{id:'b',nick:'Bruno',gameId:'1234****',kills:5},{id:'a',nick:'Alice',gameId:'1234****',kills:5},{id:'c',nick:'Clara',gameId:'1234****',kills:6}].map(p=>({earnings:0,matchesCount:1,...p}));state.matches=state.players.map(p=>({id:p.id,playerId:p.id,pos:1}));switchRankingType('booyahs')`);
+ const rows=[...a.w.document.querySelectorAll('.ranking-entry')];assert.deepEqual(rows.map(row=>row.querySelector('strong').textContent),['Clara','Alice','Bruno']);assert.ok(rows.every(row=>row.querySelector('.ranking-main-value').textContent.trim()==='1 Booyah'));a.dom.window.close();
+});
 test('Connection badge never claims online before successful reads',()=>{
  const a=app();a.run('updateConnectionBadge()');assert.equal(a.w.document.getElementById('conn-status-badge').textContent,'CONECTANDO...');a.dom.window.close();
 });
