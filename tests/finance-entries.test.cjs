@@ -10,10 +10,11 @@ test('Finance ledger: additive expenses, paid non-participants and preserved his
  try{
   await db.exec(fs.readFileSync('tests/legacy-schema.sql','utf8'));
   const names=fs.readdirSync('supabase/migrations').filter(n=>n.endsWith('.sql')).sort();
-  for(const name of names.filter(n=>!n.endsWith('_finance_entries.sql')))await db.exec(fs.readFileSync('supabase/migrations/'+name,'utf8'));
+  for(const name of names.filter(n=>!n.endsWith('_finance_entries.sql') && !n.endsWith('_admin_reports_reversals.sql')))await db.exec(fs.readFileSync('supabase/migrations/'+name,'utf8'));
   await db.exec(`INSERT INTO auth.users VALUES('${admin}');INSERT INTO auth.sessions(id,user_id) VALUES('${session}','${admin}');INSERT INTO public.admin_users(user_id) VALUES('${admin}');`);
   await authenticated();await db.query('SELECT public.save_admin_ad_spend(80,0)');await owner();
   await db.exec(fs.readFileSync('supabase/migrations/'+names.find(n=>n.endsWith('_finance_entries.sql')),'utf8'));await authenticated();
+  await owner();await db.exec(fs.readFileSync('supabase/migrations/'+names.find(n=>n.endsWith('_admin_reports_reversals.sql')),'utf8'));await authenticated();
   await t.test('Upgrade preserves the old expense as a historical opening entry',async()=>{
    const result=await summary();assert.equal(result.advertising_total,'80.00');assert.equal(result.entries_count,'1');assert.match(result.entries[0].note,/anterior/);
   });

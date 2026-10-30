@@ -314,7 +314,7 @@
       border: none; width: 22px; height: 22px; border-radius: 50%; cursor: pointer; font-size: 11px;
     }
 
-    .admin-menu-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; margin-bottom: 14px; }
+    .admin-menu-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin-bottom: 14px; }
     .admin-tile {
       background: rgba(229, 184, 57, 0.06); backdrop-filter: blur(8px);
       border: 1px solid var(--border-color); padding: 8px 4px;

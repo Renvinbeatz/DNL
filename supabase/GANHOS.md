@@ -35,14 +35,15 @@ Os totais são consultados ao abrir Ganhos, pelo botão Atualizar e após as atu
 
 Nenhuma publicação nem escrita remota foi feita nesta alteração. Confirmar o projeto aqvyehkrbjttvdirtjzd e um backup recuperável. As proteções 01–07, com as verificações de administrador e sessão no esquema nova_private, precisam existir.
 
-Executar `npm run package:finances` para gerar os dois pacotes. Escolher **somente um**:
+Executar `npm run package:finances` para gerar os três pacotes. Escolher **somente um**, conforme a versão já aplicada:
 
-- **A aba Ganhos já foi ativada no banco:** aplicar uma vez `supabase/update-finance-entries.sql`. É somente a atualização `20261026094537_finance_entries.sql`. O total de anúncios já salvo vira um lançamento inicial chamado “Total de anúncios anterior à atualização”; nenhum resultado ou jogador é alterado.
-- **A aba Ganhos ainda não foi ativada:** aplicar uma vez `supabase/enable-admin-finances.sql`. Ele inclui a instalação original e a atualização dos lançamentos, em uma transação.
+- **Ganhos com lançamentos acumulativos já instalado:** aplicar uma vez `supabase/update-admin-reports.sql`, com estornos, relatórios e auditoria.
+- **Somente a primeira versão de Ganhos instalada:** aplicar uma vez `supabase/update-finance-entries.sql`. Ele inclui os lançamentos acumulativos e as ferramentas administrativas. O gasto já salvo vira um lançamento inicial preservado.
+- **Ganhos ainda não instalado:** aplicar uma vez `supabase/enable-admin-finances.sql`, com as três migrações em uma transação.
 
 Em seguida, publicar o frontend com `npm run build` e saída dist, incluindo index.html, app.js e styles.css. Fazer a atualização sem registrar gastos durante a troca e recarregar as abas antigas depois. O endpoint anterior de substituição do gasto perde a permissão de uso; o frontend novo usa a função de lançamentos.
 
-Não executar os dois pacotes nem reaplicar o pacote completo de segurança para ativar esta funcionalidade. Se o projeto usa o CLI, aplicar as migrações financeiras em ordem pelo fluxo habitual, reconciliando o histórico caso tenham sido aplicadas manualmente.
+Não executar mais de um pacote nem reaplicar o pacote completo de segurança para ativar esta funcionalidade. Se o projeto usa o CLI, aplicar as migrações financeiras em ordem pelo fluxo habitual, reconciliando o histórico caso tenham sido aplicadas manualmente. Ver [estornos, relatórios e histórico](ADMIN-TOOLS.md) para as funções de 30/10.
 
 Depois da publicação, conferir o total anterior e a persistência dos novos lançamentos. Todos são aditivos; digitar novamente o total já existente cria uma despesa adicional.
 

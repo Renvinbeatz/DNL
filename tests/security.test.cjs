@@ -280,6 +280,31 @@ function financeData(overrides={}) {
  return {participations:'2',registration_fee:'6.00',accumulated_total:'12.00',payout_total:'5.50',advertising_total:'0.00',balance:'6.50',version:0,non_participants:'0',non_participant_revenue:'0.00',entries:[],entries_count:'0',...overrides};
 }
 
+test('CSV export escapes separators, quotes and spreadsheet formulas',()=>{
+ const a=app();const csv=a.w.makeReportCsv(['Nick','Descrição'],[['=HYPERLINK("bad")','a;b'],['\t=1+1','two\nlines'],[' @SUM(1)','"quoted"']]);
+ assert.ok(csv.startsWith('\uFEFF'));assert.ok(csv.includes('"\'=HYPERLINK(""bad"")"'));assert.ok(csv.includes('"a;b"'));assert.ok(csv.includes('"\'\t=1+1"'));assert.ok(csv.includes('"\' @SUM(1)"'));a.dom.window.close();
+});
+
+test('Reversal asks for a reason, updates totals and keeps the original visible',async()=>{
+ const id='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';let captured;
+ const a=app({rpc:async(name,args)=>{captured={name,args};return {data:financeData({advertising_total:'0.00',version:2,entries:[{id,kind:'advertising',amount:'80.00',created_at:'2026-10-30T00:00:00Z',reversed_at:'2026-10-30T01:00:00Z',reversal_reason:'Duplicado'}],entries_count:'1'}),error:null}}});
+ a.w.prompt=()=> 'Duplicado';a.run('state.isAdminAuthenticated=true');await a.w.reverseFinanceEntry(id);
+ assert.equal(captured.name,'reverse_finance_entry');assert.equal(captured.args.p_reason,'Duplicado');assert.match(a.w.document.getElementById('finance-entries-list').textContent,/ESTORNADO/);assert.equal(a.w.document.querySelector('[data-click="reverseFinanceEntry"]'),null);a.dom.window.close();
+});
+
+test('Audit responses arriving after logout are discarded',async()=>{
+ let release;const a=app({rpc:async()=>new Promise(r=>{release=r})});a.run('state.isAdminAuthenticated=true');const pending=a.w.loadAdminAudit(true);a.run('invalidateSessionReads();renderAll()');release({data:[{id:'1',administrator:'PRIVATE_ADMIN',operation:'UPDATE',entity:'partidas',created_at:'2026-10-30'}],error:null});await pending;
+ assert.doesNotMatch(a.w.document.getElementById('admin-audit-list').textContent,/PRIVATE_ADMIN/);a.dom.window.close();
+});
+
+test('Results export downloads a CSV with the selected period and safe text cells',async()=>{
+ let captured,blob,filename;
+ const a=app({rpc:async(name,args)=>{captured={name,args};return {data:[{id:'qa',created_at:'2026-10-30',number:'1',date:'30/10',playerNick:'=DANGEROUS()',playerGameId:'99999001',kills:1,pos:1,total:'2.50',registration_revenue:'6.00'}],error:null}}});
+ a.w.Blob=Blob;a.w.URL.createObjectURL=b=>{blob=b;return 'blob:qa'};a.w.URL.revokeObjectURL=()=>{};a.w.HTMLAnchorElement.prototype.click=function(){filename=this.download};
+ a.run('state.isAdminAuthenticated=true');a.w.document.getElementById('report-kind').value='results';a.w.document.getElementById('report-start').value='2026-10-30';a.w.document.getElementById('report-end').value='2026-10-30';
+ await a.w.exportAdminReport();assert.equal(captured.name,'get_admin_report');assert.equal(captured.args.p_start,'2026-10-30');assert.match(filename,/nova-results-.*\.csv/);const csv=await blob.text();assert.ok(csv.includes("'=DANGEROUS()"));assert.ok(csv.includes('2,50'));a.dom.window.close();
+});
+
 test('Admin gains tab loads its four currency totals and hides the other admin sections',async()=>{
  const a=app({rpc:async()=>({data:financeData(),error:null})});a.run('state.isAdminAuthenticated=true');
  await a.run(`switchAdminSubtab('finances',document.querySelector('.admin-tile[data-arg="finances"]'))`);

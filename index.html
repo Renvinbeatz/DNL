@@ -5,7 +5,26 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data:; connect-src https://aqvyehkrbjttvdirtjzd.supabase.co wss://aqvyehkrbjttvdirtjzd.supabase.co; manifest-src 'self'; base-uri 'none'; form-action 'self'; object-src 'none'">
   <meta name="referrer" content="no-referrer">
-  <title>NØVA LEAGUE — Esportes Eletrônicos</title>
+  <title>Diário da NØVA | NØVA LEAGUE</title>
+  <meta name="description" content="Resultados, rankings e premiações dos diários da NØVA LEAGUE.">
+  <link rel="canonical" href="https://novaleague.vercel.app/">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="pt_BR">
+  <meta property="og:site_name" content="NØVA LEAGUE">
+  <meta property="og:title" content="Diário da NØVA | NØVA LEAGUE">
+  <meta property="og:description" content="Resultados, rankings e premiações dos diários da NØVA LEAGUE.">
+  <meta property="og:url" content="https://novaleague.vercel.app/">
+  <meta property="og:image" content="https://novaleague.vercel.app/logo.png">
+  <meta property="og:image:secure_url" content="https://novaleague.vercel.app/logo.png">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:width" content="1080">
+  <meta property="og:image:height" content="1080">
+  <meta property="og:image:alt" content="Logo da NØVA LEAGUE">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Diário da NØVA | NØVA LEAGUE">
+  <meta name="twitter:description" content="Resultados, rankings e premiações dos diários da NØVA LEAGUE.">
+  <meta name="twitter:image" content="https://novaleague.vercel.app/logo.png">
+  <meta name="twitter:image:alt" content="Logo da NØVA LEAGUE">
 
   <link rel="icon" type="image/png" href="logo.png">
   <link rel="shortcut icon" type="image/png" href="logo.png">
@@ -176,8 +195,16 @@
           <i class="fa-solid fa-wallet" aria-hidden="true"></i>
           <span>Ganhos</span>
         </div>
+        <div role="button" tabindex="0" class="admin-tile" data-click="switchAdminSubtab" data-arg="audit"><i class="fa-solid fa-clock-rotate-left"></i><span>Histórico</span></div>
       </div>
 
+      <div id="admin-sub-audit" class="card hidden">
+        <div class="finance-heading"><h4 class="finance-title">HISTÓRICO DE ALTERAÇÕES</h4><button type="button" class="btn-copy" data-click="loadAdminAudit" data-arg="reload">ATUALIZAR</button></div>
+        <p class="finance-note">Administrador, data, operação e registro afetado. Registros antigos podem conter somente identificação e operação.</p>
+        <p id="admin-audit-status" role="status" class="finance-note"></p>
+        <div id="admin-audit-list"></div>
+        <button type="button" id="admin-audit-more" class="btn-primary hidden" data-click="loadAdminAudit">CARREGAR MAIS</button>
+      </div>
       <div id="admin-sub-players" class="card">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; gap: 8px; flex-wrap: wrap;">
           <h4 style="font-family: var(--font-sub);">BANCO DE JOGADORES</h4>
@@ -232,6 +259,16 @@
         </div>
         <p class="finance-description">Inscrição de R$ 6,00 para participantes e não participantes pagos. As premiações seguem o mesmo total do painel.</p>
         <p id="finance-status" class="finance-status" role="status">Entre no painel para consultar os valores.</p>
+        <form data-submit="exportAdminReport" id="form-admin-report" class="finance-form">
+          <h4 class="finance-title">EXPORTAR RELATÓRIO</h4>
+          <div class="form-group"><label for="report-kind">RELATÓRIO</label><select id="report-kind" class="form-control"><option value="finance">Lançamentos financeiros</option><option value="results">Resultados das partidas</option></select></div>
+          <div class="finance-grid">
+            <div class="form-group"><label for="report-start">DE (OPCIONAL)</label><input type="date" id="report-start" class="form-control"></div>
+            <div class="form-group"><label for="report-end">ATÉ (OPCIONAL)</label><input type="date" id="report-end" class="form-control"></div>
+          </div>
+          <p class="finance-note">CSV compatível com Excel. Período pela data de registro, no horário de Brasília. Sem datas, inclui todo o histórico, até 20.000 registros. Estornos permanecem identificados no financeiro.</p>
+          <button type="submit" class="btn-primary">BAIXAR CSV</button>
+        </form>
         <div class="finance-grid" aria-label="Resumo de ganhos">
           <div class="stat-card accent-gold">
             <div class="stat-label">TOTAL ACUMULADO <span class="finance-mode">AUTO</span></div>

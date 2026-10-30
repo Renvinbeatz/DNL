@@ -8,9 +8,11 @@ A auditoria de 26/10/2026 confirmou as proteções anteriores no Supabase e os c
 
 ## Ganhos da liga
 
+Desde a atualização de 30/10, Ganhos permite estornar lançamentos com motivo e exportar lançamentos/resultados em CSV por período. A nova aba Histórico mostra as operações e seus administradores. Para quem já instalou os lançamentos acumulativos, aplicar somente `supabase/update-admin-reports.sql` e publicar o frontend. Ver [instruções e limites](supabase/ADMIN-TOOLS.md).
+
 A aba **Ganhos** soma **R$ 6,00 por participação registrada e por inscrição paga de não participante**, desconta o mesmo total de premiações do painel e os gastos com anúncios. Anúncios e não participantes são lançamentos acumulativos salvos no Supabase: R$ 80 + R$ 120 totalizam R$ 200; 3 + 2 não participantes totalizam 5 inscrições e R$ 30 de receita adicional. Não participantes não geram jogadores nem resultados no ranking. O saldo pode ser negativo e a aba exibe os 50 lançamentos mais recentes, mantendo todos salvos.
 
-Para quem já ativou a aba Ganhos, aplicar apenas `supabase/update-finance-entries.sql` e publicar o frontend atualizado. O gasto antigo vira um lançamento inicial preservado. Para a primeira instalação, usar `supabase/enable-admin-finances.sql`, que inclui as duas migrações financeiras. Ambos são gerados por `npm run package:finances` e exigem as proteções 01–07. Não reaplicar o pacote completo de segurança. Fórmulas e instruções estão em [supabase/GANHOS.md](supabase/GANHOS.md). A aplicação e publicação continuam manuais.
+Para quem já instalou os lançamentos acumulativos, aplicar somente `supabase/update-admin-reports.sql`. Para quem instalou apenas a primeira versão de Ganhos, aplicar `supabase/update-finance-entries.sql`; o gasto antigo vira um lançamento inicial preservado. Na primeira instalação, usar `supabase/enable-admin-finances.sql`, que inclui as três migrações. Escolher apenas um pacote, gerado por `npm run package:finances`, e publicar o frontend. As proteções 01–07 são pré-requisito. Não reaplicar o pacote completo de segurança. Fórmulas e instruções estão em [supabase/GANHOS.md](supabase/GANHOS.md). A aplicação e publicação continuam manuais.
 
 ## Aplicar as correções da auditoria de 26/10/2026
 

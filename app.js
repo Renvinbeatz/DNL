@@ -22,6 +22,9 @@
     let sessionEpoch = 0;
     let financeFetching = null;
     let financeReadEpoch = 0;
+    let adminAuditRows=[];
+    let adminAuditMore=false;
+    let auditReadEpoch=0;
     let financeLoadState = 'idle';
     const actionLocks = new Set();
     const LOGIN_RETRY_KEY = 'nova_login_retry_until_v1';
@@ -319,6 +322,7 @@
       sessionEpoch++;
       fetching=null;
       financeFetching=null;financeReadEpoch++;financeLoadState='idle';
+      adminAuditRows=[];adminAuditMore=false;auditReadEpoch++;
       Object.assign(state,{isAdminAuthenticated:false,currentPlayer:null,players:[],matches:[],coupons:[],messages:[],finances:null});
     }
 
@@ -509,12 +513,13 @@
     }
 
     function switchAdminSubtab(sub, element) {
-      const sections=['players','matches','coupons','messages','finances'];
+      const sections=['players','matches','coupons','messages','finances','audit'];
       if(!state.isAdminAuthenticated || !sections.includes(sub)) return;
       document.querySelectorAll('.admin-tile').forEach(t => t.classList.remove('active'));
       element.classList.add('active');
       for(const name of sections) document.getElementById('admin-sub-'+name).classList.toggle('hidden',name!==sub);
       if(sub==='finances') return loadAdminFinances();
+      if(sub==='audit') return loadAdminAudit(true);
     }
 
     function financeCents(value) {
@@ -568,6 +573,8 @@
         row.append(title);
         if(entry.note){const note=document.createElement('p');note.textContent=entry.note;row.append(note);}
         const date=new Date(entry.created_at);if(!Number.isNaN(date.getTime())){const time=document.createElement('time');time.dateTime=date.toISOString();time.textContent=date.toLocaleString('pt-BR');row.append(time);}
+        if(entry.reversed_at){const reason=document.createElement('p');reason.textContent=`ESTORNADO · ${entry.reversal_reason || ''}`;row.append(reason);}
+        else if(ready){const button=document.createElement('button');button.type='button';button.className='btn-copy';button.textContent='ESTORNAR';button.dataset.click='reverseFinanceEntry';button.dataset.arg=entry.id;button.disabled=actionLocks.has('reverseFinanceEntry');row.append(button);}
         history.append(row);
       }
     }
@@ -625,6 +632,79 @@
 
     function handleSaveAdSpend(){return addFinanceEntry('advertising');}
     function handleAddNonParticipants(){return addFinanceEntry('non_participant');}
+
+    async function reverseFinanceEntry(id){
+      if(!state.isAdminAuthenticated || !uuidPattern.test(id)) throw new Error('Acesso inválido.');
+      const reason=prompt('Motivo do estorno (3 a 300 caracteres). O lançamento original será mantido no histórico.');
+      if(reason===null) return;
+      if(reason.trim().length<3 || reason.trim().length>300) throw new Error('Motivo inválido.');
+      const epoch=sessionEpoch;financeReadEpoch++;financeFetching=null;
+      const data=validateFinanceSummary(await checked(_supabase.rpc('reverse_finance_entry',{p_id:id,p_reason:reason.trim()})));
+      if(epoch!==sessionEpoch || !state.isAdminAuthenticated) return;
+      financeReadEpoch++;financeFetching=null;financeLoadState='ready';
+      if(!state.finances || data.version>=state.finances.version) state.finances=data;
+      renderAdminFinances();showToast('Lançamento estornado. Totais atualizados.');
+    }
+
+    function renderAdminAudit(){
+      const list=document.getElementById('admin-audit-list');list.replaceChildren();
+      if(!state.isAdminAuthenticated){adminAuditRows=[];adminAuditMore=false;document.getElementById('admin-audit-status').textContent='';}
+      const entities={jogadores:'Jogador',partidas:'Resultado',cupons:'Cupom',mensagens:'Comunicado',finance_entries:'Lançamento financeiro',finance_settings:'Configuração financeira'};
+      const operations={INSERT:'Cadastro',UPDATE:'Alteração',DELETE:'Exclusão',REVERSE:'Estorno'};
+      for(const row of adminAuditRows){
+        const card=document.createElement('div');card.className='finance-entry';
+        const title=document.createElement('strong');title.textContent=`${operations[row.operation] || row.operation} · ${entities[row.entity] || row.entity}`;card.append(title);
+        for(const text of [row.administrator, row.details?.label || row.entity_id, row.details?.reason,
+          row.details?.fields?.length ? 'Campos: '+row.details.fields.join(', ') : null,
+          new Date(row.created_at).toLocaleString('pt-BR')]){
+          if(!text) continue;const line=document.createElement('p');line.textContent=text;card.append(line);
+        }
+        list.append(card);
+      }
+      document.getElementById('admin-audit-more').classList.toggle('hidden',!adminAuditMore);
+    }
+
+    async function loadAdminAudit(reload=false){
+      if(!state.isAdminAuthenticated) throw new Error('Acesso inválido.');
+      const epoch=sessionEpoch;
+      const request=++auditReadEpoch;
+      const status=document.getElementById('admin-audit-status');status.textContent='Carregando histórico…';
+      try{
+        const rows=await checked(_supabase.rpc('get_admin_audit',{p_before:reload ? null : adminAuditRows.at(-1)?.id || null,p_limit:50}));
+        if(epoch!==sessionEpoch || request!==auditReadEpoch || !state.isAdminAuthenticated) return;
+        if(!Array.isArray(rows)) throw new Error('Resposta inválida.');
+        adminAuditRows=reload ? rows : [...adminAuditRows,...rows];adminAuditMore=rows.length===50;
+        renderAdminAudit();status.textContent=adminAuditRows.length ? `${adminAuditRows.length} registros carregados.` : 'Nenhuma alteração registrada.';
+      }catch(error){if(epoch!==sessionEpoch || request!==auditReadEpoch) return;status.textContent='Não foi possível carregar o histórico. Tente atualizar.';throw error;}
+    }
+
+    function makeReportCsv(headers,rows){
+      const cell=value=>{
+        let text=String(value ?? '');
+        if(/^[\s\u0000-\u001f]*[=+@-]/.test(text) || /^[\t\r\n]/.test(text)) text="'"+text;
+        return '"'+text.replaceAll('"','""')+'"';
+      };
+      return '\uFEFF'+[headers,...rows].map(row=>row.map(cell).join(';')).join('\r\n');
+    }
+
+    async function exportAdminReport(){
+      if(!state.isAdminAuthenticated) throw new Error('Acesso inválido.');
+      const kind=document.getElementById('report-kind').value;
+      const start=document.getElementById('report-start').value || null,end=document.getElementById('report-end').value || null;
+      if(!['finance','results'].includes(kind) || (start && end && start>end)) throw new Error('Período inválido.');
+      const epoch=sessionEpoch;
+      const data=await checked(_supabase.rpc('get_admin_report',{p_kind:kind,p_start:start,p_end:end}));
+      if(epoch!==sessionEpoch || !state.isAdminAuthenticated) return;
+      if(!Array.isArray(data)) throw new Error('Resposta inválida.');
+      const fields=kind==='finance'
+        ? [['id','ID'],['created_at','Registro'],['kind','Tipo'],['amount','Despesa original (R$)'],['quantity','Inscrições originais'],['registration_revenue','Receita original (R$)'],['effective_expense','Despesa válida (R$)'],['effective_revenue','Receita válida (R$)'],['note','Descrição'],['actor','Administrador (ID)'],['reversed_at','Estornado em'],['reversed_by','Estornado por (ID)'],['reversal_reason','Motivo do estorno']]
+        : [['id','ID'],['created_at','Registro'],['number','Partida'],['date','Data da partida'],['playerNick','Nick'],['playerGameId','ID Free Fire'],['kills','Kills'],['pos','Posição'],['total','Premiação (R$)'],['registration_revenue','Inscrição (R$)']];
+      const decimal=new Set(['amount','registration_revenue','total','effective_expense','effective_revenue']);
+      const csv=makeReportCsv(fields.map(f=>f[1]),data.map(row=>fields.map(([key])=>decimal.has(key) ? String(row[key] ?? '').replace('.',',') : row[key])));
+      const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
+      const link=document.createElement('a');link.href=url;link.download=`nova-${kind}-${new Date().toLocaleDateString('sv-SE',{timeZone:'America/Sao_Paulo'})}.csv`;document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+      showToast(`${data.length} registros exportados.`);
+    }
 
     function openModal(id) {
       const modal=document.getElementById(id); if (!modal) return;
@@ -1465,6 +1545,7 @@
 
       // PAINEL ADM - MÉTRICAS
       renderAdminFinances();
+      renderAdminAudit();
       if(!state.isAdminAuthenticated) {
         if(!document.getElementById('view-admin').classList.contains('hidden')) switchTab('view-home');
         document.querySelectorAll('form[data-submit]').forEach(form=>{
@@ -1599,9 +1680,12 @@
       handleBulkPlayersImport:()=>handleBulkPlayersImport(), handleAddMatch:()=>handleAddMatch(),
       handleEditMatch:()=>handleEditMatch(), handleBulkImport:()=>handleBulkImport(),
       handleAddCoupon:()=>handleAddCoupon(),
-      loadAdminFinances:()=>loadAdminFinances(true),handleSaveAdSpend:()=>handleSaveAdSpend(),handleAddNonParticipants:()=>handleAddNonParticipants()
+      loadAdminFinances:()=>loadAdminFinances(true),handleSaveAdSpend:()=>handleSaveAdSpend(),handleAddNonParticipants:()=>handleAddNonParticipants(),
+      reverseFinanceEntry:el=>reverseFinanceEntry(el.dataset.arg),loadAdminAudit:el=>loadAdminAudit(el.dataset.arg==='reload'),exportAdminReport:()=>exportAdminReport()
     };
     const adminActions=new Set(['switchAdminSubtab','openAddMatchModal','addPlayerRowToMatch','removePlayerRow','openEditMatchModal','deleteMatchGroup','updatePlayerStatus','toggleMedalFlag','deleteCoupon','deleteMessage','handleSendMessage','handleAddPlayer','handleBulkPlayersImport','handleAddMatch','handleEditMatch','handleBulkImport','handleAddCoupon','loadAdminFinances','handleSaveAdSpend','handleAddNonParticipants']);
+
+    ['reverseFinanceEntry','loadAdminAudit','exportAdminReport'].forEach(name=>adminActions.add(name));
 
     async function dispatchAction(event,type) {
       const el=event.target.closest('[data-'+type+']'); if(!el) return;
@@ -1618,7 +1702,7 @@
       catch { showToast('Não foi possível concluir. Verifique os dados, sua conexão e tente novamente.','danger'); }
       finally {
         actionLocks.delete(name); controls.forEach((c,i)=>{c.disabled=previous[i];}); el.removeAttribute('aria-busy'); renderLoginRetryControls();
-        if(['handleSaveAdSpend','handleAddNonParticipants'].includes(name)) renderAdminFinances();
+        if(['handleSaveAdSpend','handleAddNonParticipants','reverseFinanceEntry'].includes(name)) renderAdminFinances();
       }
     }
 
